@@ -1,3 +1,7 @@
+---
+description: Inject a debug harness when display_ui_to_user fragments render blank, scripts are inert, or window.app calls fail silently.
+---
+
 # MCP dynamic-ui debug logger
 
 When a fragment sent to `display_ui_to_user` misbehaves (empty canvas, no chat reply from a click handler, silent promise rejection), inject this lightweight debug harness into the fragment itself. It does not require server changes.

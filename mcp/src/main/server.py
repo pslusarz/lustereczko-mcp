@@ -1,4 +1,6 @@
 import logging
+import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated
 
@@ -25,9 +27,57 @@ mcp = FastMCP(
     version="0.1.0",
     instructions=(
         "Render arbitrary HTML in the user's UI panel via display_ui_to_user. "
-        "See the tool's description for capabilities, allowed origins, and the window.app API."
     ),
 )
+
+@dataclass
+class _Recipe:
+    slug: str
+    name: str
+    description: str
+    path: Path
+
+
+def _parse_recipe(path: Path) -> "_Recipe":
+    text = path.read_text()
+    fm = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
+    if fm:
+        fields = {}
+        for line in fm.group(1).splitlines():
+            k, _, v = line.partition(":")
+            if _:
+                fields[k.strip()] = v.strip()
+        name = fields.get("name", path.stem)
+        description = fields.get("description", f"Recipe: {path.stem}")
+    else:
+        h1 = re.search(r"^# (.+)$", text, re.MULTILINE)
+        name = h1.group(1).strip() if h1 else path.stem
+        first_para = re.search(r"^(?!#)(.{20,})", text, re.MULTILINE)
+        description = first_para.group(1).strip()[:200] if first_para else f"Recipe: {path.stem}"
+    return _Recipe(slug=path.stem, name=name, description=description, path=path)
+
+
+def _register_recipes(recipes_dir: Path) -> None:
+    if not recipes_dir.exists():
+        return
+    for path in sorted(recipes_dir.glob("*.md")):
+        recipe = _parse_recipe(path)
+
+        def _make_serve(p: Path):
+            def serve() -> str:
+                return p.read_text()
+            return serve
+
+        mcp.resource(
+            f"skill://recipes/{recipe.slug}",
+            name=recipe.name,
+            description=recipe.description,
+            mime_type="text/markdown",
+        )(_make_serve(recipe.path))
+
+
+_RECIPES_DIR = Path(__file__).parents[3] / "skills" / "lustereczko-recipies" / "recipes"
+_register_recipes(_RECIPES_DIR)
 
 _DISPLAY_CSP = ResourceCSP(
     resource_domains=[
@@ -60,13 +110,17 @@ def display_ui_to_user(
     """Render an HTML fragment in the user's UI panel.
 
     Available in-page (MCP ext-apps; both async, return Promises — params MUST be structured, not bare strings):
-      window.app.sendMessage({role: "user", content: [{type: "text", text: "..."}]})
-        posts a chat reply.
       window.app.updateModelContext({content: [{type: "text", text: "..."}]})
-        attaches state for the next turn (no immediate model response).
+        attaches state for the next turn (no immediate model response). Preferred way to signal back to the LLM.
+      window.app.sendMessage({role: "user", content: [{type: "text", text: "..."}]})
+        posts a chat reply. Use as a fallback, since hosts implement it in a klunky manner.
+      
     htmx is also preloaded. External resources allowed from cdn.jsdelivr.net,
     unpkg.com, and *.tile.openstreetmap.org.
     Avoid <iframe srcdoc>; sandboxed iframes inherit CSP and block inline scripts.
+
+    Examples: read the skill://recipes/* resources
+    (troubleshooting blank renders, silent failures, window.app errors).
     """
     return ToolResult(
         content=[TextContent(type="text", text="Content displayed to user.")],
