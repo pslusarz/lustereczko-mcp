@@ -38,7 +38,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (create i
         "run",
         "--project",
         "/absolute/path/to/lustereczko-mcp/mcp",
-        "dynamic-ui"
+        "lustereczko"
       ]
     }
   }
