@@ -2,6 +2,8 @@
 
 This is an [Model Context Protocol Application](https://apps.extensions.modelcontextprotocol.io/api/) extension to the MCP protocol. It is designed to be deployed locally, along the MCP host application and facilitate user's interaction in chat. 
 
+Important: these are instructions for the lustereczko MCP server developer agent, not for the user agent. They should only contain information about development conventions, not how to use. Use instructions are in MCP server descriptions, tool descriptions, and recipies (skills) in the skills/ folder.
+
 ## Stack
 
 - **MCP server**: Python, FastMCP (`mcp/src/main/server.py`), use `uv` to run and build everything
@@ -19,7 +21,7 @@ docs/            # Documentation - offline, not deployed to the server
 
 Recipes are how-to guides for common UI tasks. They live in `skills/lustereczko-recipies/recipes/` as `.md` files and are automatically registered by the server at startup as MCP resources under the `skill://recipes/<slug>` URI scheme (slug = filename without extension).
 
-When you need to build or debug a UI fragment, read the relevant recipe first via the MCP resource. The `display_ui_to_user` tool docstring points here for examples.
+The user's agent discovers recipes via MCP resource listing — descriptions are published automatically, so the agent can see what's available without reading them. To retrieve the content it must call the `read_resource` tool with the URI. MCP hosts do not surface resource content directly as tools.
 
 To add a recipe: drop a `.md` file in the recipes directory. Frontmatter supports `description` (used as the resource description); `name` is optional and defaults to the filename stem.
 
@@ -41,6 +43,16 @@ If the server fails to start or behaves unexpectedly, check the log first:
 ```
 
 The server installation directory is the one containing the `mcp/` subdirectory. This file is written regardless of whether the server starts successfully.
+
+## Testing
+
+Tests use FastMCP's in-process client — no running server needed. They live in `mcp/src/test/`.
+
+```bash
+cd mcp && uv run pytest src/test/ -v
+```
+
+Tests cover tool registration, resource registration, and tool behaviour. When adding a new tool or recipe, add a corresponding test.
 
 ## Commands
 

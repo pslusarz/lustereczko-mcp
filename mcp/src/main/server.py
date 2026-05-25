@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated
 
 from pydantic import Field
-from fastmcp import FastMCP
+from fastmcp import FastMCP, Context
 from fastmcp.apps.config import AppConfig, ResourceCSP
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware import MiddlewareContext
@@ -32,7 +32,7 @@ mcp = FastMCP(
         "Use tail_log to inspect server logs when debugging."
     ),
 )
-_SILENT_TOOLS = {"log_init_result", "tail_log"}
+_SILENT_TOOLS = {"log_init_result", "tail_log", "read_resource"}
 
 
 class _ToolLoggingMiddleware(LoggingMiddleware):
@@ -130,6 +130,20 @@ def tail_log(n: Annotated[int, Field(description="Number of lines to return", de
         return ToolResult(content=[TextContent(type="text", text="Log file not found.")])
     lines = log_file.read_text().splitlines()
     return ToolResult(content=[TextContent(type="text", text="\n".join(lines[-n:]))])
+
+
+@mcp.tool()
+async def read_resource(
+    uri: Annotated[str, Field(description="Resource URI, e.g. skill://recipes/ui-debug")],
+    ctx: Context,
+) -> ToolResult:
+    """Read a server resource by URI. Use to retrieve recipes (skill://recipes/<slug>) and other resources without going through the UI panel."""
+    result = await ctx.read_resource(uri)
+    text = "\n".join(
+        c.content if isinstance(c.content, str) else c.content.decode()
+        for c in result.contents
+    )
+    return ToolResult(content=[TextContent(type="text", text=text)])
 
 
 @mcp.tool(app=AppConfig(resource_uri="ui://display"))
