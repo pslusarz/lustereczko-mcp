@@ -1,9 +1,6 @@
 import pytest
-from pathlib import Path
 from fastmcp.client import Client
-from main.server import mcp
-
-_RECIPES_DIR = Path(__file__).parents[3] / "skills" / "lustereczko-recipies" / "recipes"
+from main.server import mcp, _SKILLS_DIR
 
 
 @pytest.fixture
@@ -15,33 +12,35 @@ async def client():
 async def test_tools_registered(client):
     tools = await client.list_tools()
     names = {t.name for t in tools}
-    assert {"display_ui_to_user", "tail_log", "read_resource", "log_init_result"} <= names
+    assert {"display_ui_to_user", "tail_log", "log_init_result", "list_agent_skills", "get_agent_skill"} <= names
 
 
-async def test_recipes_registered(client):
-    resources = await client.list_resources()
-    uris = {str(r.uri) for r in resources}
-    assert "skill://recipes/ui-debug" in uris
-    assert "skill://recipes/host-capabilities" in uris
+async def test_list_agent_skills(client):
+    result = await client.call_tool("list_agent_skills", {})
+    slugs = result.content[0].text.splitlines()
+    assert "ui-debug" in slugs
+    assert "host-capabilities" in slugs
 
 
-async def test_read_recipe(client):
-    result = await client.read_resource("skill://recipes/host-capabilities")
-    assert result
-    assert "getHostCapabilities" in result[0].text
-
-
-async def test_read_resource_tool(client):
-    result = await client.call_tool("read_resource", {"uri": "skill://recipes/ui-debug"})
+async def test_get_agent_skill(client):
+    result = await client.call_tool("get_agent_skill", {"slug": "ui-debug"})
     assert result.content
     assert "debug" in result.content[0].text.lower()
 
 
-@pytest.mark.parametrize("path", list(_RECIPES_DIR.glob("*.md")), ids=lambda p: p.stem)
-async def test_recipe_content_matches_file(client, path):
-    result = await client.call_tool("read_resource", {"uri": f"skill://recipes/{path.stem}"})
-    assert result.content[0].text == path.read_text()
+async def test_get_agent_skill_unknown(client):
+    result = await client.call_tool("get_agent_skill", {"slug": "does-not-exist"}, raise_on_error=False)
+    assert "not found" in result.content[0].text.lower()
 
+
+def test_skills_dir_has_files():
+    assert list(_SKILLS_DIR.glob("*.md")), f"No .md files found in {_SKILLS_DIR}"
+
+
+@pytest.mark.parametrize("path", list(_SKILLS_DIR.glob("*.md")), ids=lambda p: p.stem)
+async def test_skill_content_matches_file(client, path):
+    result = await client.call_tool("get_agent_skill", {"slug": path.stem})
+    assert result.content[0].text == path.read_text()
 
 
 async def test_tail_log_returns_text(client):

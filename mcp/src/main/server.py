@@ -1,11 +1,9 @@
 import logging
-import re
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated
 
 from pydantic import Field
-from fastmcp import FastMCP, Context
+from fastmcp import FastMCP
 from fastmcp.apps.config import AppConfig, ResourceCSP
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware import MiddlewareContext
@@ -29,10 +27,14 @@ mcp = FastMCP(
     version="0.1.0",
     instructions=(
         "Render arbitrary HTML in the user's UI panel via display_ui_to_user. "
-        "Use tail_log to inspect server logs when debugging."
+        "Use tail_log to inspect server logs when debugging. "
+        "When running into issues or looking for examples, use list_agent_skills "
+        "to discover available documentation and get_agent_skill to read it."
     ),
 )
-_SILENT_TOOLS = {"log_init_result", "tail_log", "read_resource"}
+_SILENT_TOOLS = {"log_init_result", "tail_log"}
+
+_SKILLS_DIR = Path(__file__).parents[3] / "skills" / "lustereczko-recipies" / "recipes"
 
 
 class _ToolLoggingMiddleware(LoggingMiddleware):
@@ -43,55 +45,6 @@ class _ToolLoggingMiddleware(LoggingMiddleware):
 
 
 mcp.add_middleware(_ToolLoggingMiddleware(logger=logging.getLogger(__name__), include_payloads=True))
-
-@dataclass
-class _Recipe:
-    slug: str
-    name: str
-    description: str
-    path: Path
-
-
-def _parse_recipe(path: Path) -> "_Recipe":
-    text = path.read_text()
-    fm = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
-    if fm:
-        fields = {}
-        for line in fm.group(1).splitlines():
-            k, _, v = line.partition(":")
-            if _:
-                fields[k.strip()] = v.strip()
-        name = fields.get("name", path.stem)
-        description = fields.get("description", f"Recipe: {path.stem}")
-    else:
-        h1 = re.search(r"^# (.+)$", text, re.MULTILINE)
-        name = h1.group(1).strip() if h1 else path.stem
-        first_para = re.search(r"^(?!#)(.{20,})", text, re.MULTILINE)
-        description = first_para.group(1).strip()[:200] if first_para else f"Recipe: {path.stem}"
-    return _Recipe(slug=path.stem, name=name, description=description, path=path)
-
-
-def _register_recipes(recipes_dir: Path) -> None:
-    if not recipes_dir.exists():
-        return
-    for path in sorted(recipes_dir.glob("*.md")):
-        recipe = _parse_recipe(path)
-
-        def _make_serve(p: Path):
-            def serve() -> str:
-                return p.read_text()
-            return serve
-
-        mcp.resource(
-            f"skill://recipes/{recipe.slug}",
-            name=recipe.name,
-            description=recipe.description,
-            mime_type="text/markdown",
-        )(_make_serve(recipe.path))
-
-
-_RECIPES_DIR = Path(__file__).parents[3] / "skills" / "lustereczko-recipies" / "recipes"
-_register_recipes(_RECIPES_DIR)
 
 _DISPLAY_CSP = ResourceCSP(
     resource_domains=[
@@ -133,17 +86,23 @@ def tail_log(n: Annotated[int, Field(description="Number of lines to return", de
 
 
 @mcp.tool()
-async def read_resource(
-    uri: Annotated[str, Field(description="Resource URI, e.g. skill://recipes/ui-debug")],
-    ctx: Context,
+def list_agent_skills() -> ToolResult:
+    """List available agent skill slugs. Use get_agent_skill to read one."""
+    if not _SKILLS_DIR.exists():
+        return ToolResult(content=[TextContent(type="text", text="No skills available.")])
+    slugs = [p.stem for p in sorted(_SKILLS_DIR.glob("*.md"))]
+    return ToolResult(content=[TextContent(type="text", text="\n".join(slugs))])
+
+
+@mcp.tool()
+def get_agent_skill(
+    slug: Annotated[str, Field(description="Skill slug from list_agent_skills, e.g. ui-debug")],
 ) -> ToolResult:
-    """Read a server resource by URI. Use to retrieve recipes (skill://recipes/<slug>) and other resources without going through the UI panel."""
-    result = await ctx.read_resource(uri)
-    text = "\n".join(
-        c.content if isinstance(c.content, str) else c.content.decode()
-        for c in result.contents
-    )
-    return ToolResult(content=[TextContent(type="text", text=text)])
+    """Read an agent skill document by slug."""
+    path = _SKILLS_DIR / f"{slug}.md"
+    if not path.exists():
+        return ToolResult(content=[TextContent(type="text", text=f"Skill '{slug}' not found.")])
+    return ToolResult(content=[TextContent(type="text", text=path.read_text())])
 
 
 @mcp.tool(app=AppConfig(resource_uri="ui://display"))
@@ -162,13 +121,6 @@ def display_ui_to_user(
         attaches state for the next turn (no immediate model response). Preferred way to signal back to the LLM.
       window.app.sendMessage({role: "user", content: [{type: "text", text: "..."}]})
         posts a chat reply. Use as a fallback, since hosts implement it in a klunky manner.
-      
-    htmx is also preloaded. External resources allowed from cdn.jsdelivr.net,
-    unpkg.com, and *.tile.openstreetmap.org.
-    Avoid <iframe srcdoc>; sandboxed iframes inherit CSP and block inline scripts.
-
-    Examples: read the skill://recipes/* resources
-    (troubleshooting blank renders, silent failures, window.app errors).
     """
     return ToolResult(
         content=[TextContent(type="text", text="Content displayed to user.")],
