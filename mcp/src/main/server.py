@@ -23,10 +23,12 @@ logging.basicConfig(
 )
 
 mcp = FastMCP(
-    "dynamic-ui",
+    "lustereczko",
     version="0.1.0",
     instructions=(
         "Render arbitrary HTML in the user's UI panel via display_ui_to_user. "
+        "Server logs are written to logs/server.log inside the server installation directory "
+        "(the directory containing the mcp/ subdirectory). Check there first if the server fails to start."
     ),
 )
 

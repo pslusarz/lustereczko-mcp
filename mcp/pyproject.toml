@@ -3,18 +3,18 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "dynamic-ui"
+name = "lustereczko"
 version = "0.1.0"
 description = "MCP app for agents to display HTML fragments to the user"
 requires-python = ">=3.13"
 dependencies = [
-    "fastmcp>=3.2.0",
+    "fastmcp>=3.3.1",
     "python-fasthtml>=0.12.50",
     "starlette<1.0.0",
 ]
 
 [project.scripts]
-dynamic-ui = "main.server:main"
+lustereczko = "main.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/main"]
