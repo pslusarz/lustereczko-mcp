@@ -128,6 +128,33 @@ def display_ui_to_user(
     )
 
 
+_custom_tools: dict[str, str] = {}
+
+
+@mcp.tool()
+def add_custom_tool(
+    name: Annotated[str, Field(description="Unique name for this tool")],
+    code: Annotated[str, Field(description="Python source string; must define a run(**kwargs) function")],
+) -> ToolResult:
+    """Save a Python code string as a named custom tool."""
+    _custom_tools[name] = code
+    return ToolResult(content=[TextContent(type="text", text=f"Custom tool '{name}' saved.")])
+
+
+@mcp.tool()
+def run_custom_tool(
+    name: Annotated[str, Field(description="Name of a previously saved custom tool")],
+    args: Annotated[dict, Field(description="Keyword arguments passed to the tool's run() function")] = {},
+) -> ToolResult:
+    """Execute a saved custom tool by name, passing args to its run() function."""
+    if name not in _custom_tools:
+        return ToolResult(content=[TextContent(type="text", text=f"No custom tool named '{name}'.")])
+    namespace: dict = {}
+    exec(_custom_tools[name], namespace)  # noqa: S102
+    result = namespace["run"](**args)
+    return ToolResult(content=[TextContent(type="text", text=str(result))])
+
+
 def main():
     mcp.run()
 
