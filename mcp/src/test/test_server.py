@@ -12,7 +12,7 @@ async def client():
 async def test_tools_registered(client):
     tools = await client.list_tools()
     names = {t.name for t in tools}
-    assert {"display_ui_to_user", "tail_log", "log_init_result", "list_agent_skills", "get_agent_skill"} <= names
+    assert {"display_ui_to_user", "write_server_log", "tail_server_log", "list_agent_skills", "get_agent_skill"} <= names
 
 
 async def test_list_agent_skills(client):
@@ -43,6 +43,6 @@ async def test_skill_content_matches_file(client, path):
     assert result.content[0].text == path.read_text()
 
 
-async def test_tail_log_returns_text(client):
-    result = await client.call_tool("tail_log", {"n": 5})
+async def test_tail_server_log_returns_text(client):
+    result = await client.call_tool("tail_server_log", {"n": 5})
     assert result.content

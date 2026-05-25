@@ -42,9 +42,10 @@ function sendToChat() {
   if (!last) { document.getElementById('out').textContent = 'Nothing scanned yet.'; return; }
   window.app.sendMessage({ role: 'user', content: [{ type: 'text', text: 'Host info:\n```json\n' + JSON.stringify(last, null, 2) + '\n```' }] });
 }
-function sendToLog() {
+async function sendToLog() {
   if (!last) { document.getElementById('out').textContent = 'Nothing scanned yet.'; return; }
-  window.app.sendLog({ level: 'info', data: last });
+  await window.app.callServerTool({ name: 'write_server_log', arguments: { message: last } });
+  document.getElementById('out').textContent += '\n\n[logged to server — use tail_server_log to read]';
 }
 </script>
 ```

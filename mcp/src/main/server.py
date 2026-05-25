@@ -27,12 +27,12 @@ mcp = FastMCP(
     version="0.1.0",
     instructions=(
         "Render arbitrary HTML in the user's UI panel via display_ui_to_user. "
-        "Use tail_log to inspect server logs when debugging. "
+        "Use tail_server_log to inspect server logs when debugging. "
         "When running into issues or looking for examples, use list_agent_skills "
         "to discover available documentation and get_agent_skill to read it."
     ),
 )
-_SILENT_TOOLS = {"log_init_result", "tail_log"}
+_SILENT_TOOLS = {"write_server_log", "tail_server_log"}
 
 _SKILLS_DIR = Path(__file__).parents[3] / "skills" / "lustereczko-recipies" / "recipes"
 
@@ -66,17 +66,17 @@ def display_ui() -> str:
 
 
 @mcp.tool()
-def log_init_result(init_result: dict | None = None) -> ToolResult:
-    """Called by the UI app on startup to log McpUiInitializeResult to the server log."""
+def write_server_log(message: dict | str | None = None) -> ToolResult:
+    """Write a message to the server log. The UI app can use this as a back channel to
+    pass data (e.g. host capabilities, debug state) to the server; read it back with tail_server_log."""
     import json
-    logging.getLogger(__name__).info(
-        "McpUiInitializeResult:\n%s", json.dumps(init_result, indent=2)
-    )
+    text = json.dumps(message, indent=2) if isinstance(message, dict) else str(message)
+    logging.getLogger(__name__).info("UI log:\n%s", text)
     return ToolResult(content=[TextContent(type="text", text="Logged.")])
 
 
 @mcp.tool()
-def tail_log(n: Annotated[int, Field(description="Number of lines to return", default=50)] = 50) -> ToolResult:
+def tail_server_log(n: Annotated[int, Field(description="Number of lines to return", default=50)] = 50) -> ToolResult:
     """Return the last n lines of the server log."""
     log_file = _LOG_DIR / "server.log"
     if not log_file.exists():

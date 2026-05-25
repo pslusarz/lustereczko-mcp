@@ -36,7 +36,7 @@ Use official reference whenever user asks specific question about the MCP apps p
 
 ## Debugging
 
-If the server fails to start or behaves unexpectedly, check the log first:
+If the server fails to start or behaves unexpectedly, check the log first (or use `tail_server_log` if the server is running):
 
 ```
 <server installation directory>/logs/server.log
@@ -53,6 +53,8 @@ cd mcp && uv run pytest src/test/ -v
 ```
 
 Use TDD (red-green): write a failing test first, then fix the implementation. When debugging a tool's runtime behaviour, add an introspection test that asserts `False` with the observed value to expose the actual structure — don't read source files to guess. When adding a new tool or recipe, add a corresponding test.
+
+Use `tail_server_log` to inspect server logs when debugging.
 
 ## Commands
 
