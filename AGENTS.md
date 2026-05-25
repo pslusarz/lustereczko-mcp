@@ -52,7 +52,7 @@ Tests use FastMCP's in-process client — no running server needed. They live in
 cd mcp && uv run pytest src/test/ -v
 ```
 
-Tests cover tool registration, resource registration, and tool behaviour. When adding a new tool or recipe, add a corresponding test.
+Use TDD (red-green): write a failing test first, then fix the implementation. When debugging a tool's runtime behaviour, add an introspection test that asserts `False` with the observed value to expose the actual structure — don't read source files to guess. When adding a new tool or recipe, add a corresponding test.
 
 ## Commands
 

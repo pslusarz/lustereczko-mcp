@@ -1,6 +1,9 @@
 import pytest
+from pathlib import Path
 from fastmcp.client import Client
 from main.server import mcp
+
+_RECIPES_DIR = Path(__file__).parents[3] / "skills" / "lustereczko-recipies" / "recipes"
 
 
 @pytest.fixture
@@ -31,7 +34,14 @@ async def test_read_recipe(client):
 async def test_read_resource_tool(client):
     result = await client.call_tool("read_resource", {"uri": "skill://recipes/ui-debug"})
     assert result.content
-    assert len(result.content[0].text) > 0
+    assert "debug" in result.content[0].text.lower()
+
+
+@pytest.mark.parametrize("path", list(_RECIPES_DIR.glob("*.md")), ids=lambda p: p.stem)
+async def test_recipe_content_matches_file(client, path):
+    result = await client.call_tool("read_resource", {"uri": f"skill://recipes/{path.stem}"})
+    assert result.content[0].text == path.read_text()
+
 
 
 async def test_tail_log_returns_text(client):
