@@ -15,6 +15,14 @@ skills/          # Skill definitions and recipes deployed to the server
 docs/            # Documentation - offline, not deployed to the server
 ```
 
+## Recipes
+
+Recipes are how-to guides for common UI tasks. They live in `skills/lustereczko-recipies/recipes/` as `.md` files and are automatically registered by the server at startup as MCP resources under the `skill://recipes/<slug>` URI scheme (slug = filename without extension).
+
+When you need to build or debug a UI fragment, read the relevant recipe first via the MCP resource. The `display_ui_to_user` tool docstring points here for examples.
+
+To add a recipe: drop a `.md` file in the recipes directory. Frontmatter supports `description` (used as the resource description); `name` is optional and defaults to the filename stem.
+
 ## API Reference
 
 Use official reference whenever user asks specific question about the MCP apps protocol. Do not make assumptions, this documentation changes frequently, and the latest version is not in your training dataset.

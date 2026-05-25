@@ -7,6 +7,8 @@ from typing import Annotated
 from pydantic import Field
 from fastmcp import FastMCP
 from fastmcp.apps.config import AppConfig, ResourceCSP
+from fastmcp.server.middleware.logging import LoggingMiddleware
+from fastmcp.server.middleware import MiddlewareContext
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
 from .templates import render_shell
@@ -27,10 +29,20 @@ mcp = FastMCP(
     version="0.1.0",
     instructions=(
         "Render arbitrary HTML in the user's UI panel via display_ui_to_user. "
-        "Server logs are written to logs/server.log inside the server installation directory "
-        "(the directory containing the mcp/ subdirectory). Check there first if the server fails to start."
+        "Use tail_log to inspect server logs when debugging."
     ),
 )
+_SILENT_TOOLS = {"log_init_result", "tail_log"}
+
+
+class _ToolLoggingMiddleware(LoggingMiddleware):
+    async def on_call_tool(self, context: MiddlewareContext, call_next):
+        if context.message.name in _SILENT_TOOLS:
+            return await call_next(context)
+        return await super().on_call_tool(context, call_next)
+
+
+mcp.add_middleware(_ToolLoggingMiddleware(logger=logging.getLogger(__name__), include_payloads=True))
 
 @dataclass
 class _Recipe:
@@ -98,6 +110,26 @@ _DISPLAY_CSP = ResourceCSP(
 )
 def display_ui() -> str:
     return render_shell()
+
+
+@mcp.tool()
+def log_init_result(init_result: dict | None = None) -> ToolResult:
+    """Called by the UI app on startup to log McpUiInitializeResult to the server log."""
+    import json
+    logging.getLogger(__name__).info(
+        "McpUiInitializeResult:\n%s", json.dumps(init_result, indent=2)
+    )
+    return ToolResult(content=[TextContent(type="text", text="Logged.")])
+
+
+@mcp.tool()
+def tail_log(n: Annotated[int, Field(description="Number of lines to return", default=50)] = 50) -> ToolResult:
+    """Return the last n lines of the server log."""
+    log_file = _LOG_DIR / "server.log"
+    if not log_file.exists():
+        return ToolResult(content=[TextContent(type="text", text="Log file not found.")])
+    lines = log_file.read_text().splitlines()
+    return ToolResult(content=[TextContent(type="text", text="\n".join(lines[-n:]))])
 
 
 @mcp.tool(app=AppConfig(resource_uri="ui://display"))
