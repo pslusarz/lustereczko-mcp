@@ -59,4 +59,6 @@ async def test_add_and_run_custom_tool(client):
 
 async def test_run_custom_tool_unknown(client):
     result = await client.call_tool("run_custom_tool", {"name": "does-not-exist"}, raise_on_error=False)
-    assert "no custom tool" in result.content[0].text.lower()
+    text = result.content[0].text.lower()
+    assert "no custom tool" in text
+    assert "available:" in text

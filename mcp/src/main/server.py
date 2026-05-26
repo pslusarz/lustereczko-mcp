@@ -128,7 +128,32 @@ def display_ui_to_user(
     )
 
 
-_custom_tools: dict[str, str] = {}
+_TOOLS_FILE = Path("/tmp/lustereczko_tools.json")
+
+
+def _load_tools() -> dict[str, str]:
+    import fcntl, json
+    if not _TOOLS_FILE.exists():
+        return {}
+    with _TOOLS_FILE.open() as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
+        try:
+            return json.load(f)
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
+
+
+def _save_tools(tools: dict[str, str]) -> None:
+    import fcntl, json
+    with _TOOLS_FILE.open("w") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)
+        try:
+            json.dump(tools, f)
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
+
+
+_custom_tools: dict[str, str] = _load_tools()
 
 
 @mcp.tool()
@@ -138,6 +163,7 @@ def add_custom_tool(
 ) -> ToolResult:
     """Save a Python code string as a named custom tool."""
     _custom_tools[name] = code
+    _save_tools(_custom_tools)
     return ToolResult(content=[TextContent(type="text", text=f"Custom tool '{name}' saved.")])
 
 
@@ -148,7 +174,10 @@ def run_custom_tool(
 ) -> ToolResult:
     """Execute a saved custom tool by name, passing args to its run() function."""
     if name not in _custom_tools:
-        return ToolResult(content=[TextContent(type="text", text=f"No custom tool named '{name}'.")])
+        _custom_tools.update(_load_tools())
+    if name not in _custom_tools:
+        available = ", ".join(_custom_tools) or "none"
+        return ToolResult(content=[TextContent(type="text", text=f"No custom tool named '{name}'. Available: {available}.")])
     namespace: dict = {}
     exec(_custom_tools[name], namespace)  # noqa: S102
     result = namespace["run"](**args)
