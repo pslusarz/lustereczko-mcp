@@ -15,6 +15,10 @@ Dynamic UI for your generative agent. Your LLM can use it to display HTML intera
 
 ![Map with click context](docs/screenshots/map-click-context.png)
 
+It doesn't have to end here. With dynamic tool deployment, you can ask the agent to build you a full blown app — here is an example of an enriched book experience that you can get with one of the recipe skills.
+
+![Rich book experience](docs/screenshots/rich-book-experience.png)
+
 ## Installation
 Do we really need this? This is a python mcp server, your agent should be able to figure out how to install it locally. While at it, pick up the lustereczko-recipies skill.
 

@@ -11,3 +11,5 @@ description: Recipes for working with the lustereczko dynamic-ui MCP server. Use
 |-----------|--------|
 | Debugging the UI is called on by the user, or user indicates an issue with the generated UI, ie the fragment renders blank, scripts inert, or `window.app` calls fail silently | [UI debug logger](recipes/ui-debug.md) |
 | Need to know what the host supports before building a fragment, or user wants to inspect capabilities/context/version at runtime | [Host capabilities inspector](recipes/host-capabilities.md) |
+| Deploying a dynamic Python tool at runtime via `add_custom_tool` and calling it from the UI via `window.app.callServerTool` | [Custom tools](recipes/custom-tools.md) |
+| Building a paginated content reader (book, document, long-form text) with a character/location timeline, driven by server-side Python tools | [Content viewer](recipes/content-viewer.md) |
