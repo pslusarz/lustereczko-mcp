@@ -1,7 +1,11 @@
 ## Lustereczko
 Dynamic UI for your generative agent. Your LLM can use it to display HTML interactive UI to the user. 
 
+This seems modest, and you can use it for modest things like charting data you are currently looking at. But it is also a proof of concept for something much bigger. That your agent can write you an app right in the chat. The only app you will ever need. And it will be customized to your unique way of doing things, and it will change with you.
+
 ## Examples
+
+But let's start small...
 
 **Hello World** — simplest possible display call:
 
