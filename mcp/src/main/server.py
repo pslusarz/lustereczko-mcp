@@ -11,11 +11,10 @@ from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
 from .templates import render_shell
 from .tools.skills import register as _register_skills
+from .tools.custom import register as _register_custom
 
 _LOG_DIR = Path(__file__).parent.parent.parent.parent / "logs"
 _LOG_DIR.mkdir(exist_ok=True)
-_SCRATCHPAD_DIR = Path(__file__).parent.parent.parent.parent / "server-scratchpad"
-_SCRATCHPAD_DIR.mkdir(exist_ok=True)
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
@@ -37,6 +36,7 @@ mcp = FastMCP(
 )
 _SILENT_TOOLS = {"write_server_log", "tail_server_log"}
 _register_skills(mcp)
+_register_custom(mcp)
 
 
 class _ToolLoggingMiddleware(LoggingMiddleware):
@@ -108,62 +108,6 @@ def display_ui_to_user(
         content=[TextContent(type="text", text="Content displayed to user.")],
         meta={"html": html_fragment},
     )
-
-
-_TOOLS_FILE = _SCRATCHPAD_DIR / "tools.json"
-
-
-def _load_tools() -> dict[str, str]:
-    import fcntl, json
-    if not _TOOLS_FILE.exists():
-        return {}
-    with _TOOLS_FILE.open() as f:
-        fcntl.flock(f, fcntl.LOCK_SH)
-        try:
-            return json.load(f)
-        finally:
-            fcntl.flock(f, fcntl.LOCK_UN)
-
-
-def _save_tools(tools: dict[str, str]) -> None:
-    import fcntl, json
-    with _TOOLS_FILE.open("w") as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        try:
-            json.dump(tools, f)
-        finally:
-            fcntl.flock(f, fcntl.LOCK_UN)
-
-
-_custom_tools: dict[str, str] = _load_tools()
-
-
-@mcp.tool()
-def add_custom_tool(
-    name: Annotated[str, Field(description="Unique name for this tool")],
-    code: Annotated[str, Field(description="Python source string; must define a run(**kwargs) function")],
-) -> ToolResult:
-    """Save a Python code string as a named custom tool."""
-    _custom_tools[name] = code
-    _save_tools(_custom_tools)
-    return ToolResult(content=[TextContent(type="text", text=f"Custom tool '{name}' saved.")])
-
-
-@mcp.tool()
-def run_custom_tool(
-    name: Annotated[str, Field(description="Name of a previously saved custom tool")],
-    args: Annotated[dict, Field(description="Keyword arguments passed to the tool's run() function")] = {},
-) -> ToolResult:
-    """Execute a saved custom tool by name, passing args to its run() function."""
-    if name not in _custom_tools:
-        _custom_tools.update(_load_tools())
-    if name not in _custom_tools:
-        available = ", ".join(_custom_tools) or "none"
-        return ToolResult(content=[TextContent(type="text", text=f"No custom tool named '{name}'. Available: {available}.")])
-    namespace: dict = {}
-    exec(_custom_tools[name], namespace)  # noqa: S102
-    result = namespace["run"](**args)
-    return ToolResult(content=[TextContent(type="text", text=str(result))])
 
 
 def main():
