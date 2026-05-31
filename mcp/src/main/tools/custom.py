@@ -54,7 +54,7 @@ def register(mcp: FastMCP) -> None:
         name: Annotated[str, Field(description="Unique name for this tool")],
         code: Annotated[str, Field(description="Python source string; must define a run(**kwargs) function")],
     ) -> ToolResult:
-        """Save a Python code string as a named custom tool."""
+        """Save a Python code string as a named custom tool. The code runs on the server and can access the local filesystem using absolute paths. See best-practices:ui-agent-communication for patterns."""
         _add_tool(name, code)
         return ToolResult(content=[TextContent(type="text", text=f"Custom tool '{name}' saved.")])
 

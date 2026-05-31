@@ -32,11 +32,13 @@ Do we really need this? This is a python mcp server, your agent should be able t
 - "Display Civil War battles in Missouri on an interactive map. Pay attention to the battle I select." - will use window.updateModelContext
 
 ## How it works
-MCP App extension to the MCP protocol allows MCP server to display the UI to the user. Lustereczko takes a UI that user's LLM has generated and reflects it back to the host. We also allow the user's agent to deploy dynamic tools to the server that the UI can then call, thus building full frontend / backend apps. There is server log introspection, ui debugging instrumentation and dynamic skill system to allow the agent to fix most issues on its own.
+Lustereczko is built on the [MCP Apps protocol](https://apps.extensions.modelcontextprotocol.io/api/), making it compatible with any MCP Apps-compliant host (Claude Desktop, Goose, etc.). It takes a UI that the user's LLM has generated and reflects it back to the host.
+
+Because the MCP Apps protocol provides only a foundation, lustereczko adds its own conventions on top to enable rich, dynamic agent↔UI interaction — see the `best-practices:ui-agent-communication` skill for details. There is also server log introspection, UI debugging instrumentation, and a dynamic skill system to allow the agent to fix most issues on its own.
 
 Why it can't work: security blah blah... Also, LLMs have a hard time with frameworks like REACT.
 
-Why it works: we keep it local and restrict the js libraries. LLMs handle HTMX generated UIs just fine, so we stick to that. Interaction with LLMs does not require complicated UIs, so we can keep it simple.
+Why it works: we keep it local and restrict the js libraries. LLMs handle HTMX generated UIs just fine, so we stick to that. Interaction with LLMs does not require complicated UIs, so we can keep it simple on the frontend.
 
 ## What is this name
 Your LLM knows, so ask it...
