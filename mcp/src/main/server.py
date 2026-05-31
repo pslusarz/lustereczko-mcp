@@ -13,6 +13,8 @@ from .templates import render_shell
 
 _LOG_DIR = Path(__file__).parent.parent.parent.parent / "logs"
 _LOG_DIR.mkdir(exist_ok=True)
+_SCRATCHPAD_DIR = Path(__file__).parent.parent.parent.parent / "server-scratchpad"
+_SCRATCHPAD_DIR.mkdir(exist_ok=True)
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
@@ -128,7 +130,7 @@ def display_ui_to_user(
     )
 
 
-_TOOLS_FILE = Path("/tmp/lustereczko_tools.json")
+_TOOLS_FILE = _SCRATCHPAD_DIR / "tools.json"
 
 
 def _load_tools() -> dict[str, str]:

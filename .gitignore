@@ -9,9 +9,16 @@
 # VSCode
 .vscode/
 
+# Claude Code
+.claude/settings.json
+.claude/settings.local.json
+
 # Logs
 logs/
 *.log
+
+# Server runtime state
+server-scratchpad/
 
 # Python
 __pycache__/

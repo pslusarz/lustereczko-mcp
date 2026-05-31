@@ -1,10 +1,10 @@
 ---
-description: Build a backend-driven content viewer with timeline in a lustereczko UI panel. Use when the task is to display paginated text content (a book, document, or long-form text) with a character/location timeline visualization, driven by Python custom tools on the lustereczko server.
+description: Build a backend-driven content viewer with timeline in a lustereczko UI panel. Use when the task is to display paginated text content (a book, document, or long-form text) with a character/location timeline visualization, driven by Python custom tools on the lustereczko server. Use when user content is too large to embed in the UI directly. 
 ---
 
 # Lustereczko content viewer recipe
 
-Builds a paginated reader + collapsible SVG timeline entirely driven by server-side Python tools. No content is embedded in the HTML.
+Builds a paginated reader + collapsible SVG timeline entirely driven by server-side Python tools. No content is embedded in the HTML, which frees up agent context from clutter and allows it to focus on technical display issues.
 
 ## Architecture
 

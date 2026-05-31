@@ -5,8 +5,16 @@ from main.server import mcp, _SKILLS_DIR
 
 @pytest.fixture
 async def client():
+    print("\n[1] before async with — Client.__aenter__ not yet called")
     async with Client(transport=mcp) as c:
+        print("[2] __aenter__ done — connection open, about to yield to test")
         yield c
+        print("[3] test finished — pytest-asyncio resumed fixture, exiting async with")
+    print("[4] __aexit__ done — connection closed")
+
+
+async def test_lifecycle_demo(client):
+    print("[TEST] test body running")
 
 
 async def test_tools_registered(client):
