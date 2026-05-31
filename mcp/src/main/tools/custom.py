@@ -2,8 +2,8 @@
 # and one for the LLM agent — that do not share memory. A tool added by the agent process is
 # invisible to the UI process and vice versa. To bridge this, tools are persisted to a JSON
 # file on disk so every process reads the same state. File locking prevents concurrent writes
-# from corrupting it. run_custom_tool re-reads the file on a cache miss so it picks up tools
-# written by other processes without requiring a restart.
+# from corrupting it. There is no in-memory cache: every call reads from disk so all processes
+# always see the current state without any invalidation logic.
 
 import fcntl
 import json
@@ -31,16 +31,21 @@ def _load_tools() -> dict[str, str]:
             fcntl.flock(f, fcntl.LOCK_UN)
 
 
-def _save_tools(tools: dict[str, str]) -> None:
-    with _TOOLS_FILE.open("w") as f:
+def _add_tool(name: str, code: str) -> None:
+    # Hold an exclusive lock across the full read-modify-write so concurrent processes
+    # cannot clobber each other's tools.
+    _TOOLS_FILE.touch(exist_ok=True)
+    with _TOOLS_FILE.open("r+") as f:
         fcntl.flock(f, fcntl.LOCK_EX)
         try:
+            content = f.read()
+            tools = json.loads(content) if content.strip() else {}
+            tools[name] = code
+            f.seek(0)
+            f.truncate()
             json.dump(tools, f)
         finally:
             fcntl.flock(f, fcntl.LOCK_UN)
-
-
-_custom_tools: dict[str, str] = _load_tools()
 
 
 def register(mcp: FastMCP) -> None:
@@ -50,8 +55,7 @@ def register(mcp: FastMCP) -> None:
         code: Annotated[str, Field(description="Python source string; must define a run(**kwargs) function")],
     ) -> ToolResult:
         """Save a Python code string as a named custom tool."""
-        _custom_tools[name] = code
-        _save_tools(_custom_tools)
+        _add_tool(name, code)
         return ToolResult(content=[TextContent(type="text", text=f"Custom tool '{name}' saved.")])
 
     @mcp.tool()
@@ -60,12 +64,11 @@ def register(mcp: FastMCP) -> None:
         args: Annotated[dict, Field(description="Keyword arguments passed to the tool's run() function")] = {},
     ) -> ToolResult:
         """Execute a saved custom tool by name, passing args to its run() function."""
-        if name not in _custom_tools:
-            _custom_tools.update(_load_tools())
-        if name not in _custom_tools:
-            available = ", ".join(_custom_tools) or "none"
+        tools = _load_tools()
+        if name not in tools:
+            available = ", ".join(tools) or "none"
             return ToolResult(content=[TextContent(type="text", text=f"No custom tool named '{name}'. Available: {available}.")])
         namespace: dict = {}
-        exec(_custom_tools[name], namespace)  # noqa: S102
+        exec(tools[name], namespace)  # noqa: S102
         result = namespace["run"](**args)
         return ToolResult(content=[TextContent(type="text", text=str(result))])
