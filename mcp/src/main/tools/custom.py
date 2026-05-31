@@ -1,3 +1,10 @@
+# Claude Desktop (and some other MCP hosts) spawns multiple server processes — one for the UI
+# and one for the LLM agent — that do not share memory. A tool added by the agent process is
+# invisible to the UI process and vice versa. To bridge this, tools are persisted to a JSON
+# file on disk so every process reads the same state. File locking prevents concurrent writes
+# from corrupting it. run_custom_tool re-reads the file on a cache miss so it picks up tools
+# written by other processes without requiring a restart.
+
 import fcntl
 import json
 from pathlib import Path
