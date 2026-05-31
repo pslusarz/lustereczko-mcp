@@ -70,7 +70,25 @@ callApp("updateModelContext", { content: [{ type: "text", text: "lastSelected: f
 
 ## Reading the output
 
-After triggering the suspect interaction, ask the user to paste the contents of the green log panel. Common signals:
+After triggering the suspect interaction, read debug output from either source:
+
+**Server log** — pipe `window.mcpLog` through `write_server_log` so you can read it without asking the user:
+
+```js
+window.mcpLog = function(msg) {
+  var el = document.getElementById("mcp-log");
+  var line = typeof msg === "string" ? msg : JSON.stringify(msg);
+  if (el) el.textContent += "\n" + line;
+  console.log("[mcp]", line);
+  window.app.callServerTool({ name: "write_server_log", arguments: { message: line } });
+};
+```
+
+Then call `tail_server_log` to read accumulated output. Prefer this — it avoids asking the user to copy-paste.
+
+**UI panel** — if the bridge is broken and `callServerTool` itself is suspect, fall back to asking the user to paste the green log panel contents.
+
+Common signals:
 
 - `app = undefined` -> bridge JS never ran. The fragment likely came in via `<iframe srcdoc>`, which inherits a strict CSP and blocks inline scripts. Inline the markup directly instead.
 - `sendMessage err: MCP error -32000: Cannot read properties of undefined (reading 'filter')` -> params shape is wrong. Use `{role, content:[{type:"text", text}]}`.
