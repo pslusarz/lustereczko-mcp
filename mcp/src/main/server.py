@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from fastmcp import FastMCP
 from fastmcp.apps.config import AppConfig, ResourceCSP
 from fastmcp.server.middleware.logging import LoggingMiddleware
@@ -87,23 +87,47 @@ def tail_server_log(n: Annotated[int, Field(description="Number of lines to retu
     return ToolResult(content=[TextContent(type="text", text="\n".join(lines[-n:]))])
 
 
+class AgentSkill(BaseModel):
+    skill_name: str
+    description: str
+
+
+class AgentSkillList(BaseModel):
+    tools: list[AgentSkill]
+
+
+def _parse_frontmatter_description(path: Path) -> str:
+    import re
+    text = path.read_text()
+    m = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
+    if not m:
+        return ""
+    for line in m.group(1).splitlines():
+        if line.startswith("description:"):
+            return line[len("description:"):].strip()
+    return ""
+
+
 @mcp.tool()
 def list_agent_skills() -> ToolResult:
-    """List available agent skill slugs. Use get_agent_skill to read one."""
+    """List available agent skills with descriptions. Use get_agent_skill to read one."""
     if not _SKILLS_DIR.exists():
-        return ToolResult(content=[TextContent(type="text", text="No skills available.")])
-    slugs = [p.stem for p in sorted(_SKILLS_DIR.glob("*.md"))]
-    return ToolResult(content=[TextContent(type="text", text="\n".join(slugs))])
+        return ToolResult(content=[TextContent(type="text", text=AgentSkillList(tools=[]).model_dump_json())])
+    skills = [
+        AgentSkill(skill_name=p.stem, description=_parse_frontmatter_description(p))
+        for p in sorted(_SKILLS_DIR.glob("*.md"))
+    ]
+    return ToolResult(content=[TextContent(type="text", text=AgentSkillList(tools=skills).model_dump_json())])
 
 
 @mcp.tool()
 def get_agent_skill(
-    slug: Annotated[str, Field(description="Skill slug from list_agent_skills, e.g. ui-debug")],
+    skill_name: Annotated[str, Field(description="skill_name from list_agent_skills, e.g. ui-debug")],
 ) -> ToolResult:
-    """Read an agent skill document by slug."""
-    path = _SKILLS_DIR / f"{slug}.md"
+    """Read an agent skill document by skill_name."""
+    path = _SKILLS_DIR / f"{skill_name}.md"
     if not path.exists():
-        return ToolResult(content=[TextContent(type="text", text=f"Skill '{slug}' not found.")])
+        return ToolResult(content=[TextContent(type="text", text=f"Skill '{skill_name}' not found.")])
     return ToolResult(content=[TextContent(type="text", text=path.read_text())])
 
 

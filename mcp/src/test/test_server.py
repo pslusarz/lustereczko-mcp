@@ -1,6 +1,7 @@
+import json
 import pytest
 from fastmcp.client import Client
-from main.server import mcp, _SKILLS_DIR
+from main.server import mcp, _SKILLS_DIR, AgentSkillList
 
 
 @pytest.fixture
@@ -25,19 +26,22 @@ async def test_tools_registered(client):
 
 async def test_list_agent_skills(client):
     result = await client.call_tool("list_agent_skills", {})
-    slugs = result.content[0].text.splitlines()
-    assert "ui-debug" in slugs
-    assert "host-capabilities" in slugs
+    skill_list = AgentSkillList.model_validate_json(result.content[0].text)
+    names = {s.skill_name for s in skill_list.tools}
+    assert "ui-debug" in names
+    assert "host-capabilities" in names
+    for skill in skill_list.tools:
+        assert skill.description, f"{skill.skill_name} has no description"
 
 
 async def test_get_agent_skill(client):
-    result = await client.call_tool("get_agent_skill", {"slug": "ui-debug"})
+    result = await client.call_tool("get_agent_skill", {"skill_name": "ui-debug"})
     assert result.content
     assert "debug" in result.content[0].text.lower()
 
 
 async def test_get_agent_skill_unknown(client):
-    result = await client.call_tool("get_agent_skill", {"slug": "does-not-exist"}, raise_on_error=False)
+    result = await client.call_tool("get_agent_skill", {"skill_name": "does-not-exist"}, raise_on_error=False)
     assert "not found" in result.content[0].text.lower()
 
 
@@ -47,7 +51,7 @@ def test_skills_dir_has_files():
 
 @pytest.mark.parametrize("path", list(_SKILLS_DIR.glob("*.md")), ids=lambda p: p.stem)
 async def test_skill_content_matches_file(client, path):
-    result = await client.call_tool("get_agent_skill", {"slug": path.stem})
+    result = await client.call_tool("get_agent_skill", {"skill_name": path.stem})
     assert result.content[0].text == path.read_text()
 
 
