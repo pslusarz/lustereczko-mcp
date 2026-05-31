@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 from fastmcp import FastMCP
 from fastmcp.apps.config import AppConfig, ResourceCSP
 from fastmcp.server.middleware.logging import LoggingMiddleware
@@ -10,6 +10,7 @@ from fastmcp.server.middleware import MiddlewareContext
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
 from .templates import render_shell
+from .tools.skills import register as _register_skills
 
 _LOG_DIR = Path(__file__).parent.parent.parent.parent / "logs"
 _LOG_DIR.mkdir(exist_ok=True)
@@ -35,8 +36,7 @@ mcp = FastMCP(
     ),
 )
 _SILENT_TOOLS = {"write_server_log", "tail_server_log"}
-
-_SKILLS_DIR = Path(__file__).parents[3] / "skills" / "lustereczko-recipies" / "recipes"
+_register_skills(mcp)
 
 
 class _ToolLoggingMiddleware(LoggingMiddleware):
@@ -85,50 +85,6 @@ def tail_server_log(n: Annotated[int, Field(description="Number of lines to retu
         return ToolResult(content=[TextContent(type="text", text="Log file not found.")])
     lines = log_file.read_text().splitlines()
     return ToolResult(content=[TextContent(type="text", text="\n".join(lines[-n:]))])
-
-
-class AgentSkill(BaseModel):
-    skill_name: str
-    description: str
-
-
-class AgentSkillList(BaseModel):
-    tools: list[AgentSkill]
-
-
-def _parse_frontmatter_description(path: Path) -> str:
-    import re
-    text = path.read_text()
-    m = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
-    if not m:
-        return ""
-    for line in m.group(1).splitlines():
-        if line.startswith("description:"):
-            return line[len("description:"):].strip()
-    return ""
-
-
-@mcp.tool()
-def list_agent_skills() -> ToolResult:
-    """List available agent skills with descriptions. Use get_agent_skill to read one."""
-    if not _SKILLS_DIR.exists():
-        return ToolResult(content=[TextContent(type="text", text=AgentSkillList(tools=[]).model_dump_json())])
-    skills = [
-        AgentSkill(skill_name=p.stem, description=_parse_frontmatter_description(p))
-        for p in sorted(_SKILLS_DIR.glob("*.md"))
-    ]
-    return ToolResult(content=[TextContent(type="text", text=AgentSkillList(tools=skills).model_dump_json())])
-
-
-@mcp.tool()
-def get_agent_skill(
-    skill_name: Annotated[str, Field(description="skill_name from list_agent_skills, e.g. ui-debug")],
-) -> ToolResult:
-    """Read an agent skill document by skill_name."""
-    path = _SKILLS_DIR / f"{skill_name}.md"
-    if not path.exists():
-        return ToolResult(content=[TextContent(type="text", text=f"Skill '{skill_name}' not found.")])
-    return ToolResult(content=[TextContent(type="text", text=path.read_text())])
 
 
 @mcp.tool(app=AppConfig(resource_uri="ui://display"))
