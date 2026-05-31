@@ -50,7 +50,7 @@ def _add_tool(name: str, code: str) -> None:
 
 def register(mcp: FastMCP) -> None:
     @mcp.tool()
-    def add_custom_tool(
+    def add_custom_tool(  # pyright: ignore[reportUnusedFunction]
         name: Annotated[str, Field(description="Unique name for this tool")],
         code: Annotated[str, Field(description="Python source string; must define a run(**kwargs) function")],
     ) -> ToolResult:
@@ -59,7 +59,7 @@ def register(mcp: FastMCP) -> None:
         return ToolResult(content=[TextContent(type="text", text=f"Custom tool '{name}' saved.")])
 
     @mcp.tool()
-    def run_custom_tool(
+    def run_custom_tool(  # pyright: ignore[reportUnusedFunction]
         name: Annotated[str, Field(description="Name of a previously saved custom tool")],
         args: Annotated[dict, Field(description="Keyword arguments passed to the tool's run() function")] = {},
     ) -> ToolResult:
