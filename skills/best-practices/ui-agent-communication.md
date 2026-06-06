@@ -51,7 +51,7 @@ This mechanism can be used to allow the agent to dynamically replace a part of t
 
 ## Adding custom backend tools for the agent
 
-Unless the data is really simple, agent should avoid mixing data and display code in the UI app. It is best to provide a backend call for the app. This is done by adding a custom tool (via add custom tool). UI can then retrieve the data via call custom tool tool call (window.app.callServerTool("run_custom_tool", ...)). 
+Unless the data is really simple, agent should avoid mixing data and display code in the UI app. It is best to provide a backend call for the app. This is done by adding a custom tool (via add_custom_tool). UI can then retrieve the data via call custom tool tool call (window.app.callServerTool("run_custom_tool", ...)). 
 
 Example — read a local file:
 
@@ -61,6 +61,8 @@ def run():
 ```
 
 Use absolute paths. The server's working directory is not predictable.
+
+Note, some hosts start multiple processes, and Agent ends up talking to one instance, while UI is polling another. It is necessary to coortinate messages with a inter process shared resource, ie a file. Remember to write lock the resource access when writing so it doesn't get corrupted.
 
 ## The log back-channel
 
