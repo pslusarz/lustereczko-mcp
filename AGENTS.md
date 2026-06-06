@@ -29,6 +29,8 @@ To add a recipe: drop a `.md` file in the recipes directory. Frontmatter support
 
 Use official reference whenever user asks specific question about the MCP apps protocol. Do not make assumptions, this documentation changes frequently, and the latest version is not in your training dataset.
 [Official reference](https://apps.extensions.modelcontextprotocol.io/api/)
+[More details on the UI behavior](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx)
+[Fast MCP apps support](https://gofastmcp.com/apps/fastmcp-app)
 
 ## Where we diverge from the official documentation
 - We use Htmx as the basis for the UI (default documentation recommends other frameworks)

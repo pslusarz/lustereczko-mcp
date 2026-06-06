@@ -1,5 +1,5 @@
 ---
-description: How lustereczko's UI and the agent communicate — updateModelContext, sendMessage, the log back-channel, and custom backend tools.
+description: How lustereczko's UI and the agent communicate — updateModelContext, sendMessage, notify_ui + poll_agent_notifications (file-queue polling), the log back-channel, and custom backend tools. NOTE: oncalltool/onlisttools and the ontoolresult/_meta path are broken on Claude desktop — do not use.
 ---
 
 # UI ↔ Agent Communication
@@ -17,37 +17,72 @@ window.app.updateModelContext() — this in most host applications is implemente
 
 window.app.sendMessage() - this results in the user prompt input box being populated with whatever the message content is. User then gets to decide if it needs editing and when to submit that prompt into chat. It is rather confusing to the user for large inputs, but could be useful if the app was about choosing from a complicated set of options, and you want to clearly communicate back to the agent all selections user has made. Some practitioners also suggest using it to request that agent calls a specified tool with specific parameters (or allowing agent to decide on what parameters to pass). This can work for very simple interactions, where user needs to inspect every step of UI to agent communication, or where the workflow is simple and fixed on UI (user chooses options) -> agent (matches options to some external action) -> external service/tool call.
 
-### oncalltool — UI-defined tools the agent can call
+### oncalltool — do not use
 
-The UI can expose tools back to the agent by implementing two handlers: `onlisttools` (advertises available tools) and `oncalltool` (handles invocations). This is the reverse direction of `window.app.callServerTool()`.
+`oncalltool`/`onlisttools` require the Claude desktop host to relay the agent's `tools/call` request from the agent's MCP connection to the UI's SSE connection. This relay is not implemented in Claude desktop 1.0.0. Setting `oncalltool` triggers a capability negotiation that fails with "Client does not support tool capability", and may also break `callServerTool` for the remainder of the session.
 
-```js
-// Advertise tools to the host/agent
-app.onlisttools = async (params, extra) => {
-  return {
-    tools: [
-      { name: "my_tool", description: "...", inputSchema: { type: "object", properties: { value: { type: "string" } } } }
-    ]
-  };
-};
+**Do not attempt to implement this mechanism.** Use `notify_ui` + `poll_agent_notifications` for agent→UI signaling instead (see section below).
 
-// Handle invocations from the agent
-app.oncalltool = async (params, extra) => {
-  // params.name      — string, tool name the agent called
-  // params.arguments — Record<string, unknown> | undefined
-  if (params.name === "my_tool") {
-    const result = doSomething(params.arguments?.value);
-    return { content: [{ type: "text", text: String(result) }] };
-  }
-  return { content: [{ type: "text", text: "Unknown tool" }], isError: true };
-};
+For UI→agent communication, `sendMessage` and `updateModelContext` remain the supported paths.
+
+### notify_ui — agent→UI signaling via file queue + polling
+
+The `_meta`/`ontoolresult` path (spec: `ui/notifications/tool-result`) is not consistently dispatched by Claude desktop — the host does not route tool results to the UI for tools other than `display_ui_to_user`, regardless of `AppConfig(resource_uri=...)` metadata. **Use the polling mechanism instead.**
+
+`notify_ui` enqueues an event to a file-backed queue (`notifications.json`, `fcntl`-locked). The UI drains it by calling `poll_agent_notifications` on a timer.
+
+**What the agent puts on the queue:**
+
+```python
+notify_ui(event="my-event", data={"key": "value"})
+# Appends to queue: {"event": "my-event", "data": {"key": "value"}}
 ```
 
-`oncalltool` must return a `CallToolResult`:
-- `content`: array of content blocks (`{ type: "text", text: string }` etc.)
-- `isError`: optional boolean
+**What `poll_agent_notifications` returns** (as `content[0].text`, JSON-encoded):
 
-This mechanism can be used to allow the agent to dynamically replace a part of the UI. Best practice here is to keep it simple and stick to htmx conventions.
+```json
+[
+  {"event": "my-event", "data": {"key": "value"}},
+  {"event": "another-event", "data": null}
+]
+```
+
+Returns all pending items in FIFO order and clears the queue atomically. Returns `[]` when the queue is empty.
+
+**Minimal UI polling code:**
+
+```js
+function normalize(d) {
+  // data may arrive as a pre-serialized string depending on FastMCP version
+  if (d == null || typeof d !== 'string') return d;
+  try { return JSON.parse(d); } catch(e) { return d; }
+}
+
+function poll() {
+  window.app.callServerTool({ name: 'poll_agent_notifications', arguments: {} })
+    .then(result => {
+      const text = result?.content?.[0]?.text ?? result;
+      const items = JSON.parse(typeof text === 'string' ? text : JSON.stringify(text));
+      items.forEach(evt => {
+        const data = normalize(evt.data);
+        handleEvent(evt.event, data);   // your handler
+      });
+    })
+    .catch(err => console.warn('poll error', err))
+    .finally(() => setTimeout(poll, 1500));
+}
+
+setTimeout(poll, 500);   // start after short delay for app.connect()
+```
+
+**Notes:**
+- `callServerTool` takes `{ name, arguments }` — not positional args.
+- Always use `.finally(() => setTimeout(poll, N))` so polling continues after errors.
+- 1500 ms is a safe interval; the call itself adds latency on top.
+- `data` values may deserialize as strings on some FastMCP versions — always normalize before use.
+- The queue is a flat JSON file at `logs/notifications.json`; cross-process safe via `fcntl.LOCK_EX`.
+
+Full App handler reference: [apps.extensions.modelcontextprotocol.io/api/classes/app.App.html](https://apps.extensions.modelcontextprotocol.io/api/classes/app.App.html)
 
 ## Adding custom backend tools for the agent
 
@@ -68,6 +103,3 @@ Note, some hosts start multiple processes, and Agent ends up talking to one inst
 
 Agent should instrument the app with debug info. UI can call tool write_server_log to pass debug information about its state and the agent can then call tail_server_log to read the UI state and troubleshoot. Note, host capabilities negotiated at app startup are already instrumented to be written to the log.
 
-## Message stream emulation (not yet implemented)
-
-Most flexible is the use of two custom tools ui_to_agent(message, [params]) and agent_to_ui(message, [params]). Both sides need to implement polling, and decide how to respond to messages. While polling on the UI side is not a problem, it is no different than ontoolcall mechanism above that is already provided by MCP Apps. Polling on the agent side could be really powerful (superseding any "mcp sampling" functionality), if host's agent was able to sustain it. This is speculative, but noting it here so we can get back to experimenting with it.
