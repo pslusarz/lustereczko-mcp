@@ -1,5 +1,3 @@
-import fcntl
-import json
 import logging
 from pathlib import Path
 from typing import Annotated
@@ -14,6 +12,7 @@ from mcp.types import TextContent
 from .templates import render_shell
 from .tools.skills import register as _register_skills
 from .tools.custom import register as _register_custom
+from .tools.bidirectional_streaming import register as _register_streaming
 
 _LOG_DIR = Path(__file__).parent.parent.parent.parent / "logs"
 _LOG_DIR.mkdir(exist_ok=True)
@@ -36,35 +35,11 @@ mcp = FastMCP(
         "to discover available documentation and get_agent_skill to read it."
     ),
 )
-_SILENT_TOOLS = {"write_server_log", "tail_server_log", "poll_agent_notifications"}
+_SILENT_TOOLS = {"write_server_log", "tail_server_log", "poll_ui_messages", "notify_agent"}
 
-_QUEUE_FILE = _LOG_DIR / "notifications.json"
-
-
-def _queue_append(event: str, data) -> None:
-    _QUEUE_FILE.touch(exist_ok=True)
-    with open(_QUEUE_FILE, "r+") as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        content = f.read().strip()
-        items = json.loads(content) if content else []
-        items.append({"event": event, "data": data})
-        f.seek(0)
-        f.truncate()
-        json.dump(items, f)
-
-
-def _queue_drain() -> list:
-    _QUEUE_FILE.touch(exist_ok=True)
-    with open(_QUEUE_FILE, "r+") as f:
-        fcntl.flock(f, fcntl.LOCK_EX)
-        content = f.read().strip()
-        items = json.loads(content) if content else []
-        f.seek(0)
-        f.truncate()
-        json.dump([], f)
-    return items
 _register_skills(mcp)
 _register_custom(mcp)
+_register_streaming(mcp)
 
 
 class _ToolLoggingMiddleware(LoggingMiddleware):
@@ -115,24 +90,6 @@ def tail_server_log(n: Annotated[int, Field(description="Number of lines to retu
     return ToolResult(content=[TextContent(type="text", text="\n".join(lines[-n:]))])
 
 
-@mcp.tool()
-def notify_ui(
-    event: Annotated[str, Field(description="Event name the UI should react to.")],
-    data: Annotated[dict | str | None, Field(description="Optional payload.")] = None,
-) -> ToolResult:
-    """Post a notification for the UI. The UI consumes it by calling poll_agent_notifications."""
-    _queue_append(event, data)
-    return ToolResult(content=[TextContent(type="text", text="ok")])
-
-
-@mcp.tool()
-def poll_agent_notifications() -> ToolResult:
-    """Return all pending agent notifications in order and clear the queue.
-    Call from the UI via window.app.callServerTool('poll_agent_notifications', {})."""
-    items = _queue_drain()
-    return ToolResult(content=[TextContent(type="text", text=json.dumps(items))])
-
-
 @mcp.tool(app=AppConfig(resource_uri="ui://display"))
 def display_ui_to_user(
     html_fragment: Annotated[
@@ -149,12 +106,10 @@ def display_ui_to_user(
         attaches state for the next turn (no immediate model response).
       window.app.sendMessage({role: "user", content: [{type: "text", text: "..."}]})
         posts a chat reply (populates the user input box).
+      window.app.callServerTool({name: "notify_agent", arguments: {event, data}})
+        enqueues a UI→agent message; agent drains it with poll_agent_messages.
 
-    Agent→UI via notify_ui: call notify_ui(event, data) from the agent; the UI registers
-      app.ontoolresult to receive result._meta.event and result._meta.data.
-
-    UI-defined tools the agent can call: register app.onlisttools (advertise) and
-      app.oncalltool (handle). The host relays agent invocations to the UI.
+    Agent→UI: call notify_ui(event, data); the UI polls with poll_ui_messages.
     """
     return ToolResult(
         content=[TextContent(type="text", text="Content displayed to user.")],
