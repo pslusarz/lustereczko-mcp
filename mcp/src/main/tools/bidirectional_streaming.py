@@ -112,7 +112,17 @@ def register(mcp: FastMCP) -> None:
             dict | str | None, Field(description="Optional payload.")
         ] = None,
     ) -> ToolResult:
-        """Post a message from the UI to the agent queue. The agent consumes it by calling poll_agent_messages."""
+        """Post a message from the UI to the agent queue. The agent consumes it by calling poll_agent_messages.
+        
+    Channel ID protocol — ALWAYS follow this for bidirectional communication:
+      1. Generate a channel_id before this call: e.g. f"ch-{int(time.time()*1000)}"
+      2. Embed it as a literal constant in the HTML: const MY_CHANNEL = "<channel_id>";
+      3. Use it in every notify_ui / poll_agent_messages call on the agent side.
+      4. The UI uses MY_CHANNEL in every poll_ui_messages / notify_agent call.
+      Each display_ui_to_user call gets a fresh channel_id. Old panels keep their own
+      channel and remain fully isolated.
+        
+        """
         _queue_append(_channel_file(channel_id, "agent"), event, data)
         return ToolResult(content=[TextContent(type="text", text="ok")])
 

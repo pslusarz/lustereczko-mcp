@@ -9,6 +9,7 @@ from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware import MiddlewareContext
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
+
 from .templates import render_shell
 from .tools.skills import register as _register_skills
 from .tools.custom import register as _register_custom
@@ -16,6 +17,7 @@ from .tools.bidirectional_streaming import register as _register_streaming
 
 _LOG_DIR = Path(__file__).parent.parent.parent.parent / "logs"
 _LOG_DIR.mkdir(exist_ok=True)
+
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
@@ -35,6 +37,7 @@ mcp = FastMCP(
         "to discover available documentation and get_agent_skill to read it."
     ),
 )
+
 _SILENT_TOOLS = {"write_server_log", "tail_server_log", "poll_ui_messages", "notify_agent"}
 
 _register_skills(mcp)
@@ -95,21 +98,38 @@ def display_ui_to_user(
     html_fragment: Annotated[
         str,
         Field(
-            description="HTML fragment; replaces #display-container. Inline <style>/<script> OK. External scripts/styles/images allowed from cdn.jsdelivr.net, unpkg.com, *.tile.openstreetmap.org. External <script src=...> in the fragment is unreliable (subsequent inline scripts may run before it loads); inject scripts dynamically (document.createElement('script')) and run init in onload. Do NOT use <iframe srcdoc> (sandbox blocks scripts). htmx + window.app available."
+            description=(
+                "HTML fragment; replaces #display-container. Inline <style>/<script> OK. "
+                "External scripts/styles/images allowed from cdn.jsdelivr.net, unpkg.com, "
+                "*.tile.openstreetmap.org. External <script src=...> in the fragment is "
+                "unreliable (subsequent inline scripts may run before it loads); inject "
+                "scripts dynamically (document.createElement('script')) and run init in "
+                "onload. Do NOT use <iframe srcdoc> (sandbox blocks scripts). "
+                "htmx + window.app available."
+            )
         ),
     ],
 ) -> ToolResult:
     """Render an HTML fragment in the user's UI panel.
 
-    UI→agent (MCP ext-apps; async, return Promises — params MUST be structured, not bare strings):
+    Widget height — CRITICAL:
+      window.innerHeight is hard-capped at 300px inside the lustereczko iframe.
+      height:100%, flex:1, position:fixed, and all viewport-relative tricks collapse
+      to 300px and do NOT work. The only correct approach: give the main content div
+      an explicit pixel height (e.g. <div style="height:700px">). The panel
+      auto-expands to fit content height, so explicit px values work correctly.
+      Never use overflow:hidden on <body> — it clips content to 300px.
+
+    UI->agent (MCP ext-apps; async, return Promises - params MUST be structured, not bare strings):
       window.app.updateModelContext({content: [{type: "text", text: "..."}]})
         attaches state for the next turn (no immediate model response).
       window.app.sendMessage({role: "user", content: [{type: "text", text: "..."}]})
         posts a chat reply (populates the user input box).
-      window.app.callServerTool({name: "notify_agent", arguments: {event, data}})
-        enqueues a UI→agent message; agent drains it with poll_agent_messages.
+      window.app.callServerTool({name: "notify_agent", arguments: {event, channel_id, data}})
+        enqueues a UI->agent message; agent drains it with poll_agent_messages(channel_id).
 
-    Agent→UI: call notify_ui(event, data); the UI polls with poll_ui_messages.
+    Agent->UI: call notify_ui(event, channel_id, data); the UI polls with
+      poll_ui_messages(channel_id).
     """
     return ToolResult(
         content=[TextContent(type="text", text="Content displayed to user.")],
