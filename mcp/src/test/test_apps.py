@@ -3,6 +3,7 @@ import shutil
 import uuid
 
 from main.tools.apps import _APPS_DIR, _CURRENT_UI_FILE, _app_dir, canonical_app_name
+from main.tools.custom import _TOOLS_DIR
 
 
 def _save_args(name: str, **overrides):
@@ -80,6 +81,47 @@ async def test_load_app_returns_context_and_frontend(client):
         assert "instructions" in payload
     finally:
         shutil.rmtree(_app_dir(canonical_app_name(name)), ignore_errors=True)
+
+
+async def test_save_app_copies_tools_into_app_directory(client):
+    app_name = f"test-{uuid.uuid4().hex[:8]}"
+    tool_name = f"tool-{uuid.uuid4().hex[:8]}"
+    tool_code = f"def run(**kwargs): return {uuid.uuid4()!r}"
+    try:
+        await client.call_tool("add_custom_tool", {"name": tool_name, "code": tool_code})
+        await client.call_tool("display_ui_to_user", {"html_fragment": "<p>x</p>"})
+        await client.call_tool("save_current_app", _save_args(app_name, tool_names=[tool_name]))
+
+        saved = (_app_dir(canonical_app_name(app_name)) / "tools" / f"{tool_name}.py").read_text()
+        assert saved == tool_code
+    finally:
+        shutil.rmtree(_app_dir(canonical_app_name(app_name)), ignore_errors=True)
+        (_TOOLS_DIR / f"{tool_name}.py").unlink(missing_ok=True)
+
+
+async def test_load_app_returns_tools(client):
+    app_name = f"test-{uuid.uuid4().hex[:8]}"
+    tool_name = f"tool-{uuid.uuid4().hex[:8]}"
+    tool_code = f"def run(**kwargs): return {uuid.uuid4()!r}"
+    try:
+        await client.call_tool("add_custom_tool", {"name": tool_name, "code": tool_code})
+        await client.call_tool("display_ui_to_user", {"html_fragment": "<p>x</p>"})
+        await client.call_tool("save_current_app", _save_args(app_name, tool_names=[tool_name]))
+
+        result = await client.call_tool("load_app", {"name": canonical_app_name(app_name)})
+        tools = json.loads(result.content[0].text)["tools"]
+        assert tools[tool_name] == tool_code
+    finally:
+        shutil.rmtree(_app_dir(canonical_app_name(app_name)), ignore_errors=True)
+        (_TOOLS_DIR / f"{tool_name}.py").unlink(missing_ok=True)
+
+
+async def test_save_app_missing_tool_is_an_error(client):
+    result = await client.call_tool("save_current_app", _save_args(
+        f"test-{uuid.uuid4().hex[:8]}",
+        tool_names=["no-such-tool"],
+    ), raise_on_error=False)
+    assert result.is_error
 
 
 async def test_load_app_missing_is_an_error(client):

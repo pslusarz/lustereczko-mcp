@@ -10,6 +10,8 @@ from fastmcp import FastMCP
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
 
+from .custom import _TOOLS_DIR
+
 _SCRATCHPAD_DIR = Path(__file__).parents[4] / "server-scratchpad"
 _APPS_DIR = _SCRATCHPAD_DIR / "apps"
 _CURRENT_UI_FILE = _SCRATCHPAD_DIR / "current_ui.html"
@@ -46,6 +48,15 @@ def register(mcp: FastMCP) -> None:
         (app_dir / "catalog_description.txt").write_text(catalog_description)
         (app_dir / "agent_context.md").write_text(agent_context)
 
+        if tool_names:
+            missing = [t for t in tool_names if not (_TOOLS_DIR / f"{t}.py").exists()]
+            if missing:
+                raise ValueError(f"Custom tools not found: {', '.join(missing)}")
+            tools_dir = app_dir / "tools"
+            tools_dir.mkdir(exist_ok=True)
+            for tool_name in tool_names:
+                shutil.copy(_TOOLS_DIR / f"{tool_name}.py", tools_dir / f"{tool_name}.py")
+
         return ToolResult(content=[TextContent(type="text", text=f"App '{name}' saved to {app_dir.name}/")])
 
     @mcp.tool()
@@ -68,7 +79,10 @@ def register(mcp: FastMCP) -> None:
             ),
             "agent_context": (app_dir / "agent_context.md").read_text(),
             "frontend": (app_dir / "frontend.html").read_text(),
-            "tools": {},
+            "tools": {
+                f.stem: f.read_text()
+                for f in sorted((app_dir / "tools").glob("*.py"))
+            } if (app_dir / "tools").exists() else {},
         }
         return ToolResult(content=[TextContent(type="text", text=json.dumps(payload, indent=2))])
 
