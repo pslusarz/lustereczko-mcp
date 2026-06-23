@@ -14,6 +14,7 @@ from .templates import render_shell
 from .tools.skills import register as _register_skills
 from .tools.custom import register as _register_custom
 from .tools.bidirectional_streaming import register as _register_streaming
+from .tools.apps import register as _register_apps
 
 _LOG_DIR = Path(__file__).parent.parent.parent.parent / "logs"
 _LOG_DIR.mkdir(exist_ok=True)
@@ -43,6 +44,7 @@ _SILENT_TOOLS = {"write_server_log", "tail_server_log", "poll_ui_messages", "not
 _register_skills(mcp)
 _register_custom(mcp)
 _register_streaming(mcp)
+_register_apps(mcp)
 
 
 class _ToolLoggingMiddleware(LoggingMiddleware):
@@ -131,6 +133,8 @@ def display_ui_to_user(
     Agent->UI: call notify_ui(event, channel_id, data); the UI polls with
       poll_ui_messages(channel_id).
     """
+    from .tools.apps import _CURRENT_UI_FILE
+    _CURRENT_UI_FILE.write_text(html_fragment)
     return ToolResult(
         content=[TextContent(type="text", text="Content displayed to user.")],
         meta={"html": html_fragment},
