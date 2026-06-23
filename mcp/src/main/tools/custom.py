@@ -43,7 +43,7 @@ def _add_tool(name: str, code: str) -> None:
             tools[name] = code
             f.seek(0)
             f.truncate()
-            json.dump(tools, f)
+            json.dump(tools, f, indent=2)
         finally:
             fcntl.flock(f, fcntl.LOCK_UN)
 
