@@ -12,9 +12,10 @@ Important: these are instructions for the lustereczko MCP server developer agent
 ## Project Structure
 
 ```
-mcp/src/main/    # MCP server source
-skills/          # Skill definitions and recipes deployed to the server
-docs/            # Documentation - offline, not deployed to the server
+mcp/src/main/      # MCP server source
+skills/            # Skill definitions and recipes deployed to the server
+docs/              # Documentation - offline, not deployed to the server
+server-scratchpad/ # server persistency data, git ignored
 ```
 
 ## Recipes
@@ -57,6 +58,12 @@ cd mcp && uv run pytest src/test/ -v
 Use TDD (red-green): write a failing test first, then fix the implementation. When debugging a tool's runtime behaviour, add an introspection test that asserts `False` with the observed value to expose the actual structure — don't read source files to guess. When adding a new tool or recipe, add a corresponding test.
 
 Use `tail_server_log` to inspect server logs when debugging.
+
+## Tool documentation
+ 
+Tool documentation is a first class citizen! It is key to success in agent's usage of the server, and ultimately decides the quality of the user experience. We need to be very mindful of the footprint we are creating with the documentation, but also include sufficient clues to allow the agent to work with the tools. Where possible, defer information to error messages, or server published skills files. Document parameters first, and once they are documented, do not repeat redundant information in the tool description. Documentation should not include boilerplate information that is already in the agent's training dataset. Often a meaningful example will tell a better story than extensive documentation. Keep it terse.
+
+Readme includes current context footprint number - keep it updated when adding new tools, or editing documentation.
 
 ## Commands
 

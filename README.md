@@ -1,6 +1,8 @@
 ## Lustereczko
 Dynamic UI for your generative agent. Your LLM can use it to display HTML interactive UI to the user and modify it on the fly.
 
+**MCP list_tools context footprint: ~3162 tokens.** That is the full cost of adding this server to your agent's context.
+
 This seems modest, and you can use it for modest things like charting data you are currently looking at. But it is also a proof of concept for something much bigger. The agent can write you an app right in the chat. It will be the only app you will ever need because it will be customized to your unique way of doing things, and it will change with you. 
 
 While from the days of the "data analysis" extension in github copilot this was an obvious direction for user interactions, the mainstream industry chose to impose heavyweight protocols and constraints on these interactions. As a result, chat and very klunky UIs are still the norm of how users interact with their LLMs. Lustereczko is here to change that.
