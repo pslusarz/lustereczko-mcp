@@ -9,6 +9,7 @@ description = "MCP app for agents to display HTML fragments to the user"
 requires-python = ">=3.13"
 dependencies = [
     "fastmcp>=3.3.1",
+    "grafeo>=0.5.42",
     "python-fasthtml>=0.12.50",
     "starlette<1.0.0",
 ]

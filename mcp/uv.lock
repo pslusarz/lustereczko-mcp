@@ -440,6 +440,25 @@ server = [
 ]
 
 [[package]]
+name = "grafeo"
+version = "0.5.42"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "solvor" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ec/d9/29bdc76d59285ba036cbce359e7c0407913155a24dcdad3455a8450a2bed/grafeo-0.5.42.tar.gz", hash = "sha256:f2af6bc4d243437744c84c01d1f0c99880098fd11b18205deaf2c774f987d443", size = 2490871, upload-time = "2026-05-04T14:02:12.784Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/21/b0/2a6a8f128165e826a06c687d4b6e41eb556dee459e02483646682bce3d89/grafeo-0.5.42-cp312-abi3-macosx_10_12_x86_64.whl", hash = "sha256:98fc9724e0e49291afd923a5ccd5fd099bc718c9896f4fbd5d1b3338f27dc922", size = 5146826, upload-time = "2026-05-04T14:01:58.295Z" },
+    { url = "https://files.pythonhosted.org/packages/cc/47/3fdd36f97a8b83cbeebe4923eb5a5dfef394cdd439bbf34e73ad56f2beb3/grafeo-0.5.42-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:24883ce0ab202f7f079ab145e62404f242ab44cd1b406195ce5b6873a7f3f3a7", size = 4804918, upload-time = "2026-05-04T14:02:00.129Z" },
+    { url = "https://files.pythonhosted.org/packages/63/9a/b27f0345fa4329f9e8412bd852df93f16216b9db788df711b13f4e2c5ce3/grafeo-0.5.42-cp312-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:dcbf75da90bd93cbda0cbc4d0325e51f80b66fdf3bad0501830981f7bb61b036", size = 5070222, upload-time = "2026-05-04T14:02:01.997Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/73/f64ec3acaa3b08b57c7ec1ad340ae821ff70b8b248fe32430c32ea9710b3/grafeo-0.5.42-cp312-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:376b39ae8c57f63f173ea328b24a43f1c843bc7a8159728b140cb3bf4a6c391c", size = 5317444, upload-time = "2026-05-04T14:02:03.667Z" },
+    { url = "https://files.pythonhosted.org/packages/a5/18/bb6d104f38583e4769833d8169d7d1e3a4b2962580c747efb90fa0250414/grafeo-0.5.42-cp312-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:16d15725ea6b1d69c045bc73d8ec130e3329259d7f93184df6818296e8ecfa7b", size = 5245105, upload-time = "2026-05-04T14:02:05.513Z" },
+    { url = "https://files.pythonhosted.org/packages/90/23/7d7f7f7eb50a73177d9b43dad006eac5494d7f17bab494e0dd1e68507023/grafeo-0.5.42-cp312-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:7fc3270307a475b7977045228ddb5660b4221d4a036461bafb08f0391f159a51", size = 5562037, upload-time = "2026-05-04T14:02:07.379Z" },
+    { url = "https://files.pythonhosted.org/packages/c2/d6/9ae14d674d2756160cc3bea180e7b095b8923341795f0b3659d168f708b0/grafeo-0.5.42-cp312-abi3-win32.whl", hash = "sha256:fc28e539c70e393964212f92922686c333df08dfe2ddd6a26866aa1175a00994", size = 4675773, upload-time = "2026-05-04T14:02:09.378Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/2f/dcbf471d8f18d678d5775bd3c876dfa42afb6b00251aa89c61d915b7d8be/grafeo-0.5.42-cp312-abi3-win_amd64.whl", hash = "sha256:f219b86c01a0e7bd7d5c287bef7f12656a9885b79f57048a79743e73ab87a0af", size = 5097128, upload-time = "2026-05-04T14:02:10.913Z" },
+]
+
+[[package]]
 name = "griffelib"
 version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -682,6 +701,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
+    { name = "grafeo" },
     { name = "python-fasthtml" },
     { name = "starlette" },
 ]
@@ -695,6 +715,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=3.3.1" },
+    { name = "grafeo", specifier = ">=0.5.42" },
     { name = "python-fasthtml", specifier = ">=0.12.50" },
     { name = "starlette", specifier = "<1.0.0" },
 ]
@@ -1248,6 +1269,34 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
+]
+
+[[package]]
+name = "solvor"
+version = "0.6.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/21/3ad56e6cc20ab886c48aaff3cb07153e1cc04bb0859947162b46847e71eb/solvor-0.6.2.tar.gz", hash = "sha256:fe9cea887b0d2abf107d332082b97b061289292bc8b1f8f7d7c086dac3a9a7ae", size = 114925, upload-time = "2026-04-07T20:46:15.947Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/fc/af3c6ee75e53aca32c1aaeda213e108130cf16d2270b1d5055c1d904f77a/solvor-0.6.2-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:2bd832031276dd286d5959a84c16f8d6e02c756b8cfa20a20ad85b34216bee7e", size = 387824, upload-time = "2026-04-07T20:45:48.068Z" },
+    { url = "https://files.pythonhosted.org/packages/dd/0f/03167ce22702408ad0683b565f4531c0142b505e263a31297cc94f3a8fb0/solvor-0.6.2-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:51864d66d74cf69d5cae664ccde995d9a04d87a3fc75f58375ae686bdd3d1113", size = 376249, upload-time = "2026-04-07T20:45:49.668Z" },
+    { url = "https://files.pythonhosted.org/packages/10/47/ba55f67d9b82ac2c196d17939d8a35defd6dc45ebb1935bef0014cd3f1a8/solvor-0.6.2-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6cbe4a1c4b378792d88661e863435e9e6c9060b82bf98a56e74d51b37948018d", size = 402376, upload-time = "2026-04-07T20:45:50.926Z" },
+    { url = "https://files.pythonhosted.org/packages/87/85/386402145b901c3f379634333a5362f50c58204c63247dc6864148f879b0/solvor-0.6.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e2536296281feaadb3cef0ef9c791cae64efcd1d6e209a7050f7eaa92719f854", size = 406354, upload-time = "2026-04-07T20:45:52.223Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/6e/e78223ad8f7bd181b04610109318ae80f35bd940bc2fecd567ff185aba33/solvor-0.6.2-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:d379c3ba16570bc1e441c5ba0a4daa820af69c80b1859e8e639a19d8827eba83", size = 578515, upload-time = "2026-04-07T20:45:53.487Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/25/7ae3cf34cf403563787a0b27bb91fe31d5e49877a29604da89d7e3561de7/solvor-0.6.2-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:c0fe39b9191f2570056132a6db3776fee594d1483bac3f30b2386e8a989a9027", size = 617630, upload-time = "2026-04-07T20:45:54.903Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/84/b020c1ee10213ea07cab157b5da81ca46d6eaade6d7de62479fb3ef327ed/solvor-0.6.2-cp313-cp313-win_amd64.whl", hash = "sha256:59a35c257ee59877ef163e70e69878243373e40876985d2ea13612f5cc7c4f04", size = 282966, upload-time = "2026-04-07T20:45:56.134Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/b5/7f4917ea994837c24de787364fdfceff5ea6df130b1a5a17c56cc4b85a53/solvor-0.6.2-cp313-cp313t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:759a234604d2e86b1ba96a40c75bf5102527a02a6fbc23b7ba67e65189869519", size = 402793, upload-time = "2026-04-07T20:45:57.359Z" },
+    { url = "https://files.pythonhosted.org/packages/90/4f/7cb42d83820dd041414178ce94a8e9558d64d9738ccaec542cf187d705ff/solvor-0.6.2-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:f656defa578fdb1beaa139c6d00c2c97c044f9de90170be6bf4df7c1efd2d0a0", size = 578926, upload-time = "2026-04-07T20:45:58.684Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/ca/1994eea18f64408c665a85aee533cd74e6fff6e3192fd233d6f85f97f0a4/solvor-0.6.2-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:cd73697cf0ca5e55b153f6034c272f170c754399d895efa11879c14fa43a1169", size = 618101, upload-time = "2026-04-07T20:45:59.987Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/ed/6d7249be8be538539cfc27ffc7a6950371d7fc32b2e0180c9303ce46540c/solvor-0.6.2-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:f7db5804466d6133b3d70f25515bd6b94b622a10a9b3b63571f94a817fa780f8", size = 387753, upload-time = "2026-04-07T20:46:01.507Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/5d/7a96a98c5c6142d09eb11edea0ce5c4a4ae87dd0845f58b2b52cd6c64098/solvor-0.6.2-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:932b1b9325e3e9f84056bd51db37cf924cf55c9c397950d7d920654055909aaf", size = 376186, upload-time = "2026-04-07T20:46:03.054Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/e4/96371dc9cc466fe2d69be5c58cd516e1fe6c6fdf978d0e36ac068cf01f11/solvor-0.6.2-cp314-cp314-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f2c66826db9f9a2583f93ef2533d42bff61f74f834a69343019528bb8c163684", size = 402150, upload-time = "2026-04-07T20:46:04.366Z" },
+    { url = "https://files.pythonhosted.org/packages/96/40/fedc5458fbcb52d35c3e0da4af3765e0f6e0b2d3bedbb784441abdbd5c32/solvor-0.6.2-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:392a7c574ce192663e694471beb19b72c9da810aa667931a1caffa802a54363e", size = 406064, upload-time = "2026-04-07T20:46:05.657Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/a5/e8176f9fce0c360ea31cb5e4034e2a992e0db9b606603c8bd99c0129f502/solvor-0.6.2-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:f6787be8d70af117cc510bc65ffe88fb8660735731d5e7d4b92b921cfaa79a52", size = 578293, upload-time = "2026-04-07T20:46:07.254Z" },
+    { url = "https://files.pythonhosted.org/packages/d5/45/0acab7116d68bd3743b3513dadd02ca144418ca8dd2c7c7f5e157f09cd77/solvor-0.6.2-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:ea50f324f332fc0b41ef98308bc92bc4316f6f6b37ea93ad1d121d64ad11fa5d", size = 617404, upload-time = "2026-04-07T20:46:08.92Z" },
+    { url = "https://files.pythonhosted.org/packages/62/f0/fb599debfc9d7f016cbcc2c5d7e005fce368e7669decf4ad1567fea34c79/solvor-0.6.2-cp314-cp314-win_amd64.whl", hash = "sha256:7b743d3069a2886f4e049ba2143ff76888bf2b2721516a9064d2ae1e35c652dd", size = 282917, upload-time = "2026-04-07T20:46:10.301Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/bc/be6e19acdb36bd4b5ce75b5657184dc98e057315016c6cc6bb5341e7fd4b/solvor-0.6.2-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:88d20c6745a240a296d7dbe30075bc1a8a7c2c936cdc6acc4dd3d307f07d204c", size = 402602, upload-time = "2026-04-07T20:46:11.869Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/68/77d5485646f48be76d73104dc0f43c184f9735b9c3ea4d3aea2b36b83cf5/solvor-0.6.2-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:294090e6a065ddb46c2c1b517995354fa3b764af93e9bbea4f717bcbdd36c3e9", size = 578767, upload-time = "2026-04-07T20:46:13.262Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/20/854729b7bc61293984e681970f9b1a6a394502d4b6519d773439c513ea21/solvor-0.6.2-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:e0a2c731edcdcc1c6c00b97f7163970b8b56b33a7b6e3eba0065768e2263cf25", size = 617920, upload-time = "2026-04-07T20:46:14.634Z" },
 ]
 
 [[package]]

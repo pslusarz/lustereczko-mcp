@@ -15,6 +15,7 @@ from .tools.skills import register as _register_skills
 from .tools.custom import register as _register_custom
 from .tools.bidirectional_streaming import register as _register_streaming
 from .tools.apps import register as _register_apps
+from .tools.graph import register as _register_graph
 
 _LOG_DIR = Path(__file__).parent.parent.parent.parent / "logs"
 _LOG_DIR.mkdir(exist_ok=True)
@@ -45,6 +46,7 @@ _register_skills(mcp)
 _register_custom(mcp)
 _register_streaming(mcp)
 _register_apps(mcp)
+_register_graph(mcp)
 
 
 class _ToolLoggingMiddleware(LoggingMiddleware):
