@@ -41,8 +41,14 @@ Use official reference whenever user asks specific question about the MCP apps p
 - Tools called only from UI code (e.g. `notify_agent`, `poll_ui_messages`, `write_server_log`) are declared `app=AppConfig(visibility=["app"])` so hosts keep them out of the model's context. Document their call shape in skills or model-visible tool descriptions instead.
 - The app shell pins the ext-apps JS SDK by major version (`ext-apps@2`), never `@latest`.
 
-## Future directions to watch
+## Dependency upgrades: watch list
+Re-check these whenever upgrading dependencies or reviewing new library/protocol releases.
+
 - **App-Provided Tools** ([draft spec](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/draft/apps.mdx#app-provided-tools)): the UI registers its own tools (`app.registerTool`, already in ext-apps 2.x) that the agent calls directly. Could replace the `notify_ui`/`poll_ui_messages` file-queue for agent→UI and let the agent query UI state on demand. Blocked on host support (draft-only as of 2026-10; `oncalltool` was broken on Claude desktop). Re-check when the spec leaves draft or hosts announce support.
+- **Grafeo known bugs** (worked around in `skills/best-practices/graph-queries.md`; update or remove that skill once fixed):
+  - [GrafeoDB/grafeo#573](https://github.com/GrafeoDB/grafeo/issues/573): long `OR`/`AND` chains overflow the stack and abort the server process (reproduced on 0.5.44: 2k terms OK, 10k segfaults). Re-test after upgrading.
+  - [GrafeoDB/grafeo#401](https://github.com/GrafeoDB/grafeo/issues/401): indexes lost on reopen of WAL-directory databases (ours: `server-scratchpad/graph`), and `graph_query` reopens on every call. Slated for 0.5.45.
+  - 0.5.45 migrates the on-disk format one-way (WAL directory → single `.grafeo` file). Verify `_DB_PATH` handling in `mcp/src/main/tools/graph.py` when upgrading.
 
 ## Debugging
 

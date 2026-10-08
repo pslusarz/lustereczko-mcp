@@ -25,6 +25,7 @@ def register(mcp: FastMCP) -> None:
         ],
     ) -> ToolResult:
         """Graph database backed by Grapheo. Returns a JSON array.
+        Read best-practices:graph-queries before bulk or large queries (can crash the server).
 
         Row keys are RETURN expressions for reads, variable names for writes:
           MATCH (p:Person) RETURN p.name  →  [{"p.name": "Alix"}, ...]

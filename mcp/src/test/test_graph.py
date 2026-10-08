@@ -29,6 +29,13 @@ async def test_graph_query_registered(client):
     assert "graph_query" in names
 
 
+async def test_graph_query_points_to_pitfalls_skill(client):
+    tool = next(t for t in await client.list_tools() if t.name == "graph_query")
+    assert "best-practices:graph-queries" in tool.description
+    result = await client.call_tool("get_agent_skill", {"skill_name": "best-practices:graph-queries"})
+    assert "IN [" in result.content[0].text
+
+
 # ── INSERT returns the created node(s) ───────────────────────────────────────
 
 async def test_insert_returns_created_node(client):

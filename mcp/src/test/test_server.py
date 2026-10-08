@@ -2,7 +2,7 @@ import json
 
 # Rough token estimate: ~4 chars/token, consistent with major LLM tokenizers.
 # Update _TOKEN_BUDGET when you intentionally expand the tool surface.
-_TOKEN_BUDGET = 2630
+_TOKEN_BUDGET = 2652
 
 _APP_ONLY_TOOLS = {"notify_agent", "write_server_log", "poll_ui_messages"}
 
