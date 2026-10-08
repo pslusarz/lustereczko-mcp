@@ -1,4 +1,6 @@
 ## Lustereczko
+> **Write-up:** [Lustereczko, five months on](https://pslusarz.github.io/articles/2026/10/08/lustereczko-five-months-on.html), with demos and how it works within MCP.
+
 Dynamic UI for your generative agent. Your LLM can use it to display HTML interactive UI to the user and modify it on the fly.
 
 **MCP list_tools context footprint: ~2630 tokens.** That is the full cost of adding this server to your agent's context (UI-only tools are declared `visibility: ["app"]`; hosts that ignore it add ~730 tokens).
