@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Annotated
 
 from fastmcp import FastMCP
-from fastmcp.tools.tool import ToolResult
+from fastmcp.apps import AppConfig
+from fastmcp.tools import ToolResult
 from mcp.types import TextContent
 from pydantic import Field
 
@@ -64,7 +65,7 @@ def register(mcp: FastMCP) -> None:
             str,
             Field(
                 description=(
-                    "Channel identifier. Agent should assign a unique id for each display_ui_to_user call and should hardcode that ID in the UI to be used by both agent and UI. "
+                    "Channel identifier (see protocol below). "
                     "Alphanumeric, hyphens and underscores only, 1-64 chars."
                 )
             ),
@@ -73,11 +74,20 @@ def register(mcp: FastMCP) -> None:
             dict | str | None, Field(description="Optional payload.")
         ] = None,
     ) -> ToolResult:
-        """Post a notification for the UI. The UI consumes it by calling poll_ui_messages."""
+        """Post a notification for the UI. The UI consumes it by calling poll_ui_messages.
+
+    Channel ID protocol — ALWAYS follow this for bidirectional communication:
+      1. Generate a channel_id before display_ui_to_user: e.g. f"ch-{int(time.time()*1000)}"
+      2. Embed it as a literal constant in the HTML: const MY_CHANNEL = "<channel_id>";
+      3. Use it in every notify_ui / poll_agent_messages call on the agent side.
+      4. The UI uses MY_CHANNEL in every poll_ui_messages / notify_agent call.
+      Each display_ui_to_user call gets a fresh channel_id. Old panels keep their own
+      channel and remain fully isolated.
+        """
         _queue_append(_channel_file(channel_id, "ui"), event, data)
         return ToolResult(content=[TextContent(type="text", text="ok")])
 
-    @mcp.tool()
+    @mcp.tool(app=AppConfig(visibility=["app"]))
     def poll_ui_messages(
         channel_id: Annotated[
             str,
@@ -97,7 +107,7 @@ def register(mcp: FastMCP) -> None:
         items = _queue_drain(_channel_file(channel_id, "ui"))
         return ToolResult(content=[TextContent(type="text", text=json.dumps(items))])
 
-    @mcp.tool()
+    @mcp.tool(app=AppConfig(visibility=["app"]))
     def notify_agent(
         event: Annotated[str, Field(description="Event name the agent should react to.")],
         channel_id: Annotated[
@@ -112,17 +122,7 @@ def register(mcp: FastMCP) -> None:
             dict | str | None, Field(description="Optional payload.")
         ] = None,
     ) -> ToolResult:
-        """Post a message from the UI to the agent queue. The agent consumes it by calling poll_agent_messages.
-        
-    Channel ID protocol — ALWAYS follow this for bidirectional communication:
-      1. Generate a channel_id before this call: e.g. f"ch-{int(time.time()*1000)}"
-      2. Embed it as a literal constant in the HTML: const MY_CHANNEL = "<channel_id>";
-      3. Use it in every notify_ui / poll_agent_messages call on the agent side.
-      4. The UI uses MY_CHANNEL in every poll_ui_messages / notify_agent call.
-      Each display_ui_to_user call gets a fresh channel_id. Old panels keep their own
-      channel and remain fully isolated.
-        
-        """
+        """Post a message from the UI to the agent queue. The agent consumes it by calling poll_agent_messages."""
         _queue_append(_channel_file(channel_id, "agent"), event, data)
         return ToolResult(content=[TextContent(type="text", text="ok")])
 

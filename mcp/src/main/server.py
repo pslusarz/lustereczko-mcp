@@ -4,10 +4,10 @@ from typing import Annotated
 
 from pydantic import Field
 from fastmcp import FastMCP
-from fastmcp.apps.config import AppConfig, ResourceCSP
+from fastmcp.apps import AppConfig, ResourceCSP
 from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware import MiddlewareContext
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 from mcp.types import TextContent
 
 from .templates import render_shell
@@ -77,7 +77,7 @@ def display_ui() -> str:
     return render_shell()
 
 
-@mcp.tool()
+@mcp.tool(app=AppConfig(visibility=["app"]))
 def write_server_log(message: dict | str | None = None) -> ToolResult:
     """Write a message to the server log. The UI app can use this as a back channel to
     pass data (e.g. host capabilities, debug state) to the server; read it back with tail_server_log."""
@@ -89,7 +89,8 @@ def write_server_log(message: dict | str | None = None) -> ToolResult:
 
 @mcp.tool()
 def tail_server_log(n: Annotated[int, Field(description="Number of lines to return", default=50)] = 50) -> ToolResult:
-    """Return the last n lines of the server log."""
+    """Return the last n lines of the server log. UI code can write to it via
+    callServerTool({name: "write_server_log", arguments: {message}})."""
     log_file = _LOG_DIR / "server.log"
     if not log_file.exists():
         return ToolResult(content=[TextContent(type="text", text="Log file not found.")])

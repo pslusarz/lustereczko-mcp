@@ -1,7 +1,7 @@
 from fasthtml.common import *
 
 _BRIDGE_JS = """
-import { App } from "https://cdn.jsdelivr.net/npm/@modelcontextprotocol/ext-apps@latest/+esm";
+import { App } from "https://cdn.jsdelivr.net/npm/@modelcontextprotocol/ext-apps@2/+esm";
 
 const app = new App({ name: "dynamic-ui", version: "1.0.0" });
 app.connect();

@@ -1,7 +1,7 @@
 ## Lustereczko
 Dynamic UI for your generative agent. Your LLM can use it to display HTML interactive UI to the user and modify it on the fly.
 
-**MCP list_tools context footprint: ~3162 tokens.** That is the full cost of adding this server to your agent's context.
+**MCP list_tools context footprint: ~2630 tokens.** That is the full cost of adding this server to your agent's context (UI-only tools are declared `visibility: ["app"]`; hosts that ignore it add ~730 tokens).
 
 This seems modest, and you can use it for modest things like charting data you are currently looking at. But it is also a proof of concept for something much bigger. The agent can write you an app right in the chat. It will be the only app you will ever need because it will be customized to your unique way of doing things, and it will change with you. 
 
