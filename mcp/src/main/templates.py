@@ -16,15 +16,20 @@ function executeScripts(root) {
     });
 }
 
-app.ontoolresult = (result) => {
-    const meta = result._meta ?? {};
+let rendered = null;
+function render(html) {
+    if (!html || html === rendered) return;
+    rendered = html;
     const container = document.getElementById("display-container");
-    if (meta.html) {
-        container.innerHTML = meta.html;
-        if (window.htmx) window.htmx.process(container);
-        executeScripts(container);
-    }
-};
+    container.innerHTML = html;
+    if (window.htmx) window.htmx.process(container);
+    executeScripts(container);
+}
+
+// Hosts differ in which of these carries the HTML (copilot-cli strips _meta
+// from the result), so render from whichever arrives first, once.
+app.ontoolinput = (params) => render(params?.arguments?.html_fragment);
+app.ontoolresult = (result) => render(result._meta?.html);
 """
 
 

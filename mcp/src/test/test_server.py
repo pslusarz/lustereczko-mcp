@@ -65,3 +65,13 @@ async def test_display_shell_pins_ext_apps_major_version(client):
     html = result[0].text
     assert "@modelcontextprotocol/ext-apps@2/" in html
     assert "ext-apps@latest" not in html
+
+
+async def test_display_shell_renders_from_tool_input(client):
+    # Some hosts (copilot-cli) strip _meta from the tool result the app receives,
+    # but every host must send the tool's arguments, which carry the same HTML.
+    result = await client.read_resource("ui://display")
+    html = result[0].text
+    assert "app.ontoolinput" in html
+    assert "arguments?.html_fragment" in html
+    assert "app.ontoolresult" in html
