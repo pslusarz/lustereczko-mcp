@@ -29,6 +29,10 @@ It doesn't have to end here. With dynamic tool deployment, you can ask the agent
 
 ![Rich book experience](docs/screenshots/rich-book-experience.png)
 
+The most advanced example so far is a two-way conversation inside the app. Highlight a passage of the Declaration of Independence, ask about it, and the agent's answer appears in a comment card next to that passage, without anyone typing in the chat. The app and the agent talk over a lustereczko channel, and the agent waits for questions with a background watcher. This was recorded live in GitHub Copilot chat in VS Code; see [how it was wired](https://pslusarz.github.io/articles/2026/10/08/lustereczko-five-months-on.html#how-the-declaration-demo-was-wired).
+
+![Declaration of Independence with margin comments answered by the agent](docs/screenshots/declaration-reader.png)
+
 ## Installation
 Do we really need this? This is a python mcp server, your agent should be able to figure out how to install it locally. While at it, pick up the lustereczko-recipies skill.
 
