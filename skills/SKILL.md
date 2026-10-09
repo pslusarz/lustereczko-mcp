@@ -13,3 +13,5 @@ description: Recipes for working with the lustereczko dynamic-ui MCP server. Use
 | Need to know what the host supports before building a fragment, or user wants to inspect capabilities/context/version at runtime | [Host capabilities inspector](host-capabilities.md) |
 | Deploying a dynamic Python tool at runtime via `add_custom_tool` and calling it from the UI via `window.app.callServerTool` | [Custom tools](custom-tools.md) |
 | Building a paginated content reader (book, document, long-form text) with a character/location timeline, driven by server-side Python tools | [Content viewer](content-viewer.md) |
+| The UI and the agent need to message each other while the app is open, or the agent must wake up when the UI sends something | [Bidirectional events](bidirectional-events.md) |
+| The user wants to ask about passages of a long text and get answers next to them, like document comments | [Margin comments](margin-comments.md) |

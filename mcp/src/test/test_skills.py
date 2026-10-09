@@ -8,6 +8,7 @@ async def test_list_agent_skills(client):
     names = {s.skill_name for s in skill_list.skills}
     assert "recipes:ui-debug" in names
     assert "recipes:host-capabilities" in names
+    assert "recipes:margin-comments" in names
     for skill in skill_list.skills:
         assert skill.description, f"{skill.skill_name} has no description"
 

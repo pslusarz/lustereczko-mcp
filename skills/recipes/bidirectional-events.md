@@ -1,5 +1,5 @@
 ---
-description: Establish a fully bidirectional event channel between the agent and a UI panel using notify_ui, notify_agent, and per-channel file queues. Covers channel ID assignment, agent→UI push, UI→agent signalling, and how to bootstrap an agent-side polling loop across conversation turns.
+description: Establish a fully bidirectional event channel between the agent and a UI panel using notify_ui, notify_agent, and per-channel file queues. Covers channel ID assignment, agent→UI push, UI→agent signalling, and how the agent wakes up for UI messages without the user typing in chat (background watcher, or polling inside the turn).
 ---
 
 # Bidirectional events recipe
@@ -62,9 +62,37 @@ The call returns all pending messages in FIFO order and atomically clears the qu
 
 ## 4. Bootstrap the agent polling loop
 
-**The critical difference from a normal program:** the agent cannot run a true background loop. Its "loop" is a sequence of explicit tool calls interleaved with `bash sleep` calls to avoid busy-waiting. The loop runs entirely within the agent's current conversation turn and is interrupted when the user sends a new message (which starts a fresh turn).
+**The critical difference from a normal program:** the agent cannot run a true background loop, and it only acts during a turn. Something has to give it a turn when the UI sends a message, without the user typing in the chat.
 
-Pattern:
+### Preferred: a watcher that wakes you
+
+If your host notifies you when a background terminal command finishes (GitHub Copilot does), run a small watcher in the background. It blocks until the channel's agent queue has messages, then exits; the exit gives you a turn. Waiting costs no tokens and leaves the chat free.
+
+```python
+# watch.py <channel_id> [timeout_s] — read-only; exits 0 when messages are waiting
+import json, sys, time
+from pathlib import Path
+q = Path("<lustereczko install dir>/logs/channels") / f"agent_{sys.argv[1]}.json"
+end = time.monotonic() + float(sys.argv[2] if len(sys.argv) > 2 else 1800)
+while time.monotonic() < end:
+    try: items = json.loads(q.read_text() or "[]")
+    except (FileNotFoundError, json.JSONDecodeError): items = []
+    if items: print(len(items), "message(s)"); sys.exit(0)
+    time.sleep(0.5)
+sys.exit(2)
+```
+
+```
+1. start watcher (background) → 2. display_ui_to_user
+on watcher exit:
+   poll_agent_messages(channel_id) → process each → notify_ui(...) → start watcher again
+```
+
+Start the watcher before rendering so the UI's first message is not missed. Background wake-ups can lag 10–30 s; for snappier replies (e.g. while the user is actively asking), stay in the turn and run the same watcher in the foreground with a short timeout, answer, and repeat.
+
+### Fallback: poll inside the turn
+
+Without background notifications, loop with explicit tool calls and `bash sleep` to avoid busy-waiting. The loop runs entirely within the current turn and is interrupted when the user sends a new message.
 
 ```
 1. display_ui_to_user  (renders the UI, starts its poll timer)
@@ -79,23 +107,9 @@ Pattern:
           bash sleep 1    ← yield before retrying
 ```
 
-Concretely, in tool calls:
-
-```
-call: poll_agent_messages(channel_id)   → []
-call: bash sleep 1
-call: poll_agent_messages(channel_id)   → []
-call: bash sleep 1
-call: poll_agent_messages(channel_id)   → [{"event": "player_move", ...}]
-call: bash ...process logic...
-call: notify_ui(event="state", channel_id, data=new_state)
-call: poll_agent_messages(channel_id)   → []   ← back to waiting
-...
-```
-
 ### Terminating the loop
 
-Stop calling `poll_agent_messages` when a terminal state is reached (game over, task complete, explicit `done` event from the UI). There is no automatic timeout — the loop runs until you break or the user sends a new message.
+Stop re-arming the watcher, or stop calling `poll_agent_messages`, when a terminal state is reached (game over, task complete, explicit `done` event from the UI).
 
 ### State persistence across polls
 
