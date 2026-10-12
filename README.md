@@ -38,6 +38,8 @@ Do we really need this? This is a python mcp server, your agent should be able t
 
 > **Claude Desktop (Cowork mode) users:** see [docs/cowork-setup.md](docs/cowork-setup.md) for a step-by-step guide, including compatibility notes — MCP App UI does not work in Claude Code mode or the VS Code CC extension.
 
+> **Server shows "Error" or `spawn uv ENOENT`?** The host can't find `uv` on its PATH. Use the full path from `which uv` as the command; see [Common pitfalls](docs/cowork-setup.md#common-pitfalls).
+
 ## Example prompts
 - "Display Civil War battles in Missouri on an interactive map. Pay attention to the battle I select." - will use window.updateModelContext
 

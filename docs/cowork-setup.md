@@ -97,6 +97,8 @@ document.head.appendChild(s);
 
 **Server not appearing in Cowork**: make sure you're in Cowork mode, not the Claude Code tab of Claude Desktop. They share the app but have separate MCP contexts.
 
+**Server fails to start with `spawn uv ENOENT`** (VS Code shows "Error" next to the server; Claude Desktop logs the same): the app could not find `uv`. Desktop apps on macOS do not read your shell profile, so `~/.local/bin` (where the `uv` installer puts it) is often missing from their PATH. Use the full path from `which uv` as `"command"`, e.g. `"/Users/you/.local/bin/uv"`. VS Code normally borrows your shell's PATH at startup, but gives up after 10 seconds; if its log says "Unable to resolve your shell environment in a reasonable time", speed up your shell startup (a common culprit is `nvm`; load it with `--no-use`) or raise `"application.shellEnvironmentResolutionTimeout"` in VS Code settings.
+
 ## Debugging
 
 See the `lustereczko-recipies` skill (`SKILL.md`) for a drop-in debug harness that surfaces `window.app` bridge errors inside the rendered panel itself.
