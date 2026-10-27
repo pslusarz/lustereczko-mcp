@@ -1,0 +1,28 @@
+{
+  "manifest_version": "0.4",
+  "name": "lustereczko",
+  "display_name": "Lustereczko",
+  "version": "0.1.0",
+  "description": "Dynamic UI for your generative agent: render interactive HTML apps in chat (MCP Apps).",
+  "author": {
+    "name": "Paul Slusarz"
+  },
+  "homepage": "https://pslusarz.github.io/articles/2026/10/08/lustereczko-five-months-on.html",
+  "server": {
+    "type": "uv",
+    "entry_point": "mcp/src/main/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--project", "${__dirname}/mcp", "lustereczko"]
+    }
+  },
+  "tools_generated": true,
+  "compatibility": {
+    "platforms": ["darwin", "linux", "win32"],
+    "runtimes": {
+      "python": ">=3.13"
+    }
+  },
+  "keywords": ["mcp-apps", "ui", "htmx"],
+  "license": "MIT"
+}

@@ -137,6 +137,7 @@ def display_ui_to_user(
       poll_ui_messages(channel_id).
     """
     from .tools.apps import _CURRENT_UI_FILE
+    _CURRENT_UI_FILE.parent.mkdir(parents=True, exist_ok=True)
     _CURRENT_UI_FILE.write_text(html_fragment)
     return ToolResult(
         content=[TextContent(type="text", text="Content displayed to user.")],

@@ -1,0 +1,14 @@
+{
+  "name": "lustereczko-local",
+  "description": "Installs lustereczko from this checkout.",
+  "owner": {
+    "name": "Paul Slusarz"
+  },
+  "plugins": [
+    {
+      "name": "lustereczko",
+      "source": "./",
+      "description": "Dynamic UI for your generative agent: render interactive HTML apps in chat (MCP Apps)."
+    }
+  ]
+}

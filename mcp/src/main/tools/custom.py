@@ -21,7 +21,7 @@ def _tool_path(name: str) -> Path:
 
 
 def _add_tool(name: str, code: str) -> None:
-    _TOOLS_DIR.mkdir(exist_ok=True)
+    _TOOLS_DIR.mkdir(parents=True, exist_ok=True)
     path = _tool_path(name)
     tmp = path.with_suffix(".tmp")
     tmp.write_text(code)

@@ -36,7 +36,11 @@ The most advanced example so far is a two-way conversation inside the app. Highl
 ## Installation
 Do we really need this? This is a python mcp server, your agent should be able to figure out how to install it locally. While at it, pick up the lustereczko-recipies skill.
 
-> **Claude Desktop (Cowork mode) users:** see [docs/cowork-setup.md](docs/cowork-setup.md) for a step-by-step guide, including compatibility notes — MCP App UI does not work in Claude Code mode or the VS Code CC extension.
+> **Claude Code plugin:** the repo is also a plugin marketplace. From a clone, run `claude plugin marketplace add /path/to/lustereczko-mcp`, then `claude plugin install lustereczko@lustereczko-local`. The plugin loads in place from the clone, so `logs/` and `server-scratchpad/` stay where they are. Requires `uv` on your PATH.
+
+> **Claude Desktop extension:** `uv run --project mcp python extension/build.py` builds `dist/lustereczko.mcpb`; install it from Claude Desktop's extension settings. Logs and saved apps live inside the installed extension, so reinstalling starts fresh. Requires `uv` on your PATH.
+
+> **Claude Desktop (Cowork mode) users:** see [docs/cowork-setup.md](docs/cowork-setup.md) for a step-by-step guide, including compatibility notes. Which Claude Desktop modes render the UI keeps changing between releases (as of 2026-10, both Cowork and the Code tab do; the VS Code extension and the CLI do not).
 
 > **Server shows "Error" or `spawn uv ENOENT`?** The host can't find `uv` on its PATH. Use the full path from `which uv` as the command; see [Common pitfalls](docs/cowork-setup.md#common-pitfalls).
 

@@ -42,3 +42,6 @@ build/
 .coverage
 htmlcov/
 .tox/
+
+# Scratch files
+temp/

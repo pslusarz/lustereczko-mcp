@@ -2,14 +2,14 @@
 
 ## Compatibility
 
-| Host | MCP App UI works? |
+| Host | MCP App UI works? (last checked 2026-10-22) |
 |---|---|
 | Claude Desktop — Cowork mode | ✅ Yes |
-| Claude Desktop — Claude Code tab | ❌ No |
+| Claude Desktop — Claude Code tab | ✅ Yes |
 | VS Code Claude extension | ❌ No |
 | Claude Code CLI | ❌ No |
 
-MCP App UI (`text/html;profile=mcp-app`) is a FastMCP extension that is only surfaced by Cowork mode. The MCP server itself will install and connect in any host, but the panel will never appear outside Cowork.
+Anthropic keeps changing where Claude Desktop surfaces MCP App UI (`text/html;profile=mcp-app`): at times only Cowork or only the Code tab rendered the panel. Treat this table as a snapshot. The MCP server itself installs and connects in any host; if the panel does not appear, try the other Desktop mode before debugging the server.
 
 ## Requirements
 
@@ -95,7 +95,7 @@ document.head.appendChild(s);
 
 **Allowed external origins**: `cdn.jsdelivr.net`, `unpkg.com`, `*.tile.openstreetmap.org`. All other external resources are blocked by CSP.
 
-**Server not appearing in Cowork**: make sure you're in Cowork mode, not the Claude Code tab of Claude Desktop. They share the app but have separate MCP contexts.
+**Server not appearing in Cowork or the Code tab**: the two modes load MCP servers from different places. A Desktop extension (`.mcpb`) reaches both; a server added only to Claude Code's config (`~/.claude.json` or a plugin) does not appear in Cowork.
 
 **Server fails to start with `spawn uv ENOENT`** (VS Code shows "Error" next to the server; Claude Desktop logs the same): the app could not find `uv`. Desktop apps on macOS do not read your shell profile, so `~/.local/bin` (where the `uv` installer puts it) is often missing from their PATH. Use the full path from `which uv` as `"command"`, e.g. `"/Users/you/.local/bin/uv"`. VS Code normally borrows your shell's PATH at startup, but gives up after 10 seconds; if its log says "Unable to resolve your shell environment in a reasonable time", speed up your shell startup (a common culprit is `nvm`; load it with `--no-use`) or raise `"application.shellEnvironmentResolutionTimeout"` in VS Code settings.
 
